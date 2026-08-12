@@ -1,0 +1,20 @@
+// Ateliê Terreiro — disparo do GitHub Actions.
+// Cole ANTES de: /* That's all, stop editing! Happy publishing. */
+
+define('ATELIE_GITHUB_TOKEN', 'github_pat_COLE_O_TOKEN_FINE_GRAINED_AQUI');
+define('ATELIE_GITHUB_REPOSITORY', 'atelieterreirosite-cpu/atelie-terreiro-site');
+define('ATELIE_GITHUB_EVENT', 'wordpress-content-updated');
+
+// O plugin já usa estes CPTs por padrão. Deixe explícito para documentar o contrato.
+define('ATELIE_GITHUB_POST_TYPES', array(
+    'projeto',
+    'evento',
+    'curso',
+    'obra',
+    'publicacao',
+    'exposicao',
+    'video',
+));
+
+// O frontend resolve IDs de imagem/anexo/vídeo na REST API durante o build.
+define('ATELIE_GITHUB_INCLUDE_MEDIA', true);

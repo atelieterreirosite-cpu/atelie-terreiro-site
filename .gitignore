@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
-wordpress/
+
+# WordPress helper artifacts: keep only the deploy plugin source versioned.
+wordpress/*
+!wordpress/atelie-github-deploy/
+!wordpress/atelie-github-deploy/**
 
 # Next.js output
 .next/

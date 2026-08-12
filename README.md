@@ -89,3 +89,14 @@ Na validação inicial, o WordPress retornou os campos `imagem`, `anexo` e `arqu
 Consulte `docs/HEADLESS-ARCHITECTURE.md` para o contrato completo dos campos ACF, estratégia de mídia, relacionamentos, tratamento de falhas e fluxo de atualização.
 
 O plugin de disparo fica em `wordpress/atelie-github-deploy/` e possui instruções próprias de instalação e segurança.
+
+## Automação WordPress → GitHub → Firebase
+
+O source do plugin de disparo está em `wordpress/atelie-github-deploy/`. Ele monitora os CPTs `projeto`, `evento`, `curso`, `obra`, `publicacao`, `exposicao`, `video` e mudanças na Biblioteca de Mídia. Uma única requisição WordPress é consolidada em um único `repository_dispatch` no fim do request, depois do ACF terminar de salvar.
+
+No GitHub, configure antes do primeiro deploy:
+
+- Repository Variable `NEXT_PUBLIC_WORDPRESS_URL` com a URL base do CMS, sem barra final.
+- Repository Secret `FIREBASE_SERVICE_ACCOUNT_ATELIE_TERREIRO` com o JSON da service account autorizada a publicar no projeto Firebase `atelie-terreiro`.
+
+No `wp-config.php`, antes da linha `That's all, stop editing`, defina `ATELIE_GITHUB_TOKEN`, `ATELIE_GITHUB_REPOSITORY` e `ATELIE_GITHUB_EVENT`. O evento deve permanecer `wordpress-content-updated`, que é o tipo ouvido pelo workflow.

@@ -24,13 +24,29 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Validate CI configuration
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ATELIE_TERREIRO }}
+        shell: bash
+        run: |
+          if [ -z "$NEXT_PUBLIC_WORDPRESS_URL" ]; then
+            echo "::error::Crie a Repository Variable NEXT_PUBLIC_WORDPRESS_URL em Settings > Secrets and variables > Actions > Variables."
+            exit 1
+          fi
+
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Crie o Repository Secret FIREBASE_SERVICE_ACCOUNT_ATELIE_TERREIRO com o JSON da service account do Firebase."
+            exit 1
+          fi
 
       - name: Install dependencies
         run: npm ci
@@ -38,10 +54,17 @@ jobs:
       - name: Build static site
         run: npm run build
 
+      - name: Validate static export
+        shell: bash
+        run: |
+          test -f out/index.html || {
+            echo "::error::O build terminou sem gerar out/index.html."
+            exit 1
+          }
+
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ATELIE_TERREIRO }}
           projectId: atelie-terreiro
           channelId: live
