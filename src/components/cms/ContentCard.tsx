@@ -4,7 +4,7 @@ import type { CMSItem } from "@/lib/cms/models";
 
 import { AttachmentPreview } from "./AttachmentPreview";
 import { ImagePreview } from "./ImagePreview";
-import { RichText } from "./RichText";
+import { EditorialText } from "./RichText";
 
 export interface ContentDetail {
   label: string;
@@ -38,7 +38,7 @@ export function ContentCard<TDetails extends object>({
 
         <h3>{item.content.title}</h3>
         {item.content.summary ? <p className="summary">{item.content.summary}</p> : null}
-        <RichText html={item.content.descriptionHtml} />
+        <EditorialText text={item.content.descriptionText} />
 
         {visibleDetails.length ? (
           <dl className="content-details">

@@ -1,10 +1,9 @@
-interface RichTextProps {
-  html: string | null;
+interface EditorialTextProps {
+  text: string | null | undefined;
 }
 
-export function RichText({ html }: RichTextProps) {
-  if (!html) return null;
+export function EditorialText({ text }: EditorialTextProps) {
+  if (!text) return null;
 
-  // O HTML vem do WYSIWYG de um WordPress administrado por usuários confiáveis.
-  return <div className="rich-text" dangerouslySetInnerHTML={{ __html: html }} />;
+  return <p className="whitespace-pre-line">{text}</p>;
 }

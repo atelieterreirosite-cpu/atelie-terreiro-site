@@ -3,8 +3,10 @@ import {
   fileFromWordPressMedia,
   imageFromWordPressMedia,
   mapCourse,
+  mapEditorialPage,
   mapEvent,
   mapExhibition,
+  mapOptions,
   mapProject,
   mapPublication,
   mapVideo,
@@ -20,17 +22,22 @@ import type {
   CMSCollection,
   CourseACF,
   CourseContent,
+  EditorialPageContent,
+  EditorialPageSlug,
   EventACF,
   EventContent,
   ExhibitionACF,
   ExhibitionContent,
+  OptionsContent,
   ProjectACF,
   ProjectContent,
   PublicationACF,
   PublicationContent,
   VideoACF,
   VideoContent,
+  WordPressEditorialPage,
   WordPressMedia,
+  WordPressOptions,
   WordPressPost,
   WorkACF,
   WorkContent,
@@ -48,12 +55,12 @@ const ENDPOINTS = {
 
 const mediaCache = new Map<number, Promise<WordPressMedia>>();
 
-function endpointUrl(path: string): string {
-  return `${getWordPressUrl()}/wp-json/wp/v2/${path}`;
+function wpJsonUrl(path: string): string {
+  return `${getWordPressUrl()}/wp-json/${path}`;
 }
 
-async function fetchJson<T>(path: string): Promise<T> {
-  const url = endpointUrl(path);
+async function fetchWpJson<T>(path: string): Promise<T> {
+  const url = wpJsonUrl(path);
   const response = await fetch(url, {
     headers: { Accept: "application/json" },
   });
@@ -68,6 +75,10 @@ async function fetchJson<T>(path: string): Promise<T> {
   }
 
   return (await response.json()) as T;
+}
+
+async function fetchJson<T>(path: string): Promise<T> {
+  return fetchWpJson<T>(`wp/v2/${path}`);
 }
 
 async function fetchCollection<TACF>(type: string): Promise<Array<WordPressPost<TACF>>> {
@@ -111,6 +122,13 @@ async function resolveFile(value: unknown): Promise<ACFFile | null> {
   }
 }
 
+async function resolveImageList(value: unknown): Promise<ACFImage[]> {
+  if (!Array.isArray(value)) return [];
+
+  const images = await Promise.all(value.map((entry) => resolveImage(entry)));
+  return images.filter((image): image is ACFImage => image !== null);
+}
+
 async function resolveBaseMedia(acf: { imagem?: unknown; anexo?: unknown }): Promise<ResolvedPostMedia> {
   const [image, attachment] = await Promise.all([
     resolveImage(acf.imagem),
@@ -122,7 +140,17 @@ async function resolveBaseMedia(acf: { imagem?: unknown; anexo?: unknown }): Pro
 
 export async function getProjects(): Promise<ProjectContent[]> {
   const posts = await fetchCollection<ProjectACF>(ENDPOINTS.projects);
-  return Promise.all(posts.map(async (post) => mapProject(post, await resolveBaseMedia(post.acf))));
+  return Promise.all(
+    posts.map(async (post) => {
+      const gallerySource = post.atelie_gallery ?? post.acf.atelie_gallery;
+      const [media, videoFile, gallery] = await Promise.all([
+        resolveBaseMedia(post.acf),
+        resolveFile(post.acf.arquivo_video),
+        resolveImageList(gallerySource),
+      ]);
+      return mapProject(post, { ...media, videoFile, gallery });
+    }),
+  );
 }
 
 export async function getEvents(): Promise<EventContent[]> {
@@ -137,7 +165,15 @@ export async function getCourses(): Promise<CourseContent[]> {
 
 export async function getWorks(): Promise<WorkContent[]> {
   const posts = await fetchCollection<WorkACF>(ENDPOINTS.works);
-  return Promise.all(posts.map(async (post) => mapWork(post, await resolveBaseMedia(post.acf))));
+  return Promise.all(
+    posts.map(async (post) => {
+      const [media, videoFile] = await Promise.all([
+        resolveBaseMedia(post.acf),
+        resolveFile(post.acf.arquivo_video),
+      ]);
+      return mapWork(post, media, videoFile);
+    }),
+  );
 }
 
 export async function getPublications(): Promise<PublicationContent[]> {
@@ -165,6 +201,24 @@ export async function getVideos(): Promise<VideoContent[]> {
       return mapVideo(post, media, videoFile);
     }),
   );
+}
+
+export async function getOptions(): Promise<OptionsContent> {
+  const payload = await fetchWpJson<WordPressOptions>("atelie/v1/options");
+  const homeVideoFile = await resolveFile(payload.acf?.home_video_file);
+  return mapOptions(payload, homeVideoFile);
+}
+
+export async function getEditorialPage(slug: EditorialPageSlug): Promise<EditorialPageContent> {
+  const payload = await fetchWpJson<WordPressEditorialPage>(`atelie/v1/page/${slug}`);
+  const acf = payload.acf ?? {};
+  const [sliderImages, territoryImage, luandaImage] = await Promise.all([
+    resolveImageList(acf.slider_imagens),
+    resolveImage(acf.territory_image),
+    resolveImage(acf.luanda_image),
+  ]);
+
+  return mapEditorialPage(payload, { sliderImages, territoryImage, luandaImage });
 }
 
 async function safeCollection<TItem>(

@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "export",
   trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
   experimental: {
     // Avoid child-process workers in constrained CI/desktop environments.
     workerThreads: true,

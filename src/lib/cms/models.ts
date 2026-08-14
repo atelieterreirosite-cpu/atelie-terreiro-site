@@ -48,6 +48,8 @@ export interface ProjectACF extends BaseACFContent {
   participantes?: ACFValue<string>;
   curadoria_coordenacao?: ACFValue<string>;
   video_url?: ACFValue<string>;
+  arquivo_video?: ACFMediaValue<ACFFile>;
+  atelie_gallery?: ACFValue<Array<ACFMediaValue<ACFImage>>>;
 }
 
 export interface EventACF extends BaseACFContent {
@@ -87,6 +89,7 @@ export interface WorkACF extends BaseACFContent {
   dimensoes?: ACFValue<string>;
   projeto_relacionado?: ACFValue<number | string | { ID?: number; id?: number }>;
   video_url?: ACFValue<string>;
+  arquivo_video?: ACFMediaValue<ACFFile>;
   creditos?: ACFValue<string>;
 }
 
@@ -139,6 +142,7 @@ export interface WordPressPost<TACF> {
   title?: {
     rendered: string;
   };
+  atelie_gallery?: ACFValue<Array<ACFMediaValue<ACFImage>>>;
 }
 
 export interface WordPressMedia {
@@ -167,7 +171,7 @@ export interface WordPressMedia {
 export interface NormalizedBaseContent {
   title: string;
   summary: string | null;
-  descriptionHtml: string | null;
+  descriptionText: string | null;
   image: ACFImage | null;
   attachment: ACFFile | null;
   externalLink: string | null;
@@ -192,6 +196,8 @@ export interface ProjectDetails {
   participants: string | null;
   curation: string | null;
   videoUrl: string | null;
+  videoFile: ACFFile | null;
+  gallery: ACFImage[];
 }
 
 export interface EventDetails {
@@ -229,6 +235,7 @@ export interface WorkDetails {
   dimensions: string | null;
   relatedProjectId: number | null;
   videoUrl: string | null;
+  videoFile: ACFFile | null;
   credits: string | null;
 }
 
@@ -288,4 +295,145 @@ export interface AllContentResult {
   publications: CMSCollection<PublicationContent>;
   exhibitions: CMSCollection<ExhibitionContent>;
   videos: CMSCollection<VideoContent>;
+}
+
+export interface OptionsSocialLink {
+  label?: ACFValue<string>;
+  url?: ACFValue<string>;
+}
+
+export interface OptionsACF {
+  site_name?: ACFValue<string>;
+  site_tagline?: ACFValue<string>;
+  address_street?: ACFValue<string>;
+  address_neighborhood?: ACFValue<string>;
+  address_city?: ACFValue<string>;
+  address_region?: ACFValue<string>;
+  email?: ACFValue<string>;
+  whatsapp_display?: ACFValue<string>;
+  whatsapp_url?: ACFValue<string>;
+  social_links?: ACFValue<OptionsSocialLink[]>;
+  home_video_url?: ACFValue<string>;
+  home_video_file?: ACFMediaValue<ACFFile>;
+  home_video_title?: ACFValue<string>;
+  home_video_description?: ACFValue<string>;
+  home_video_start?: ACFValue<string | number>;
+}
+
+export interface WordPressOptions {
+  id: number;
+  slug: string;
+  acf: OptionsACF;
+}
+
+export interface OptionsContent {
+  siteName: string | null;
+  siteTagline: string | null;
+  addressStreet: string | null;
+  addressNeighborhood: string | null;
+  addressCity: string | null;
+  addressRegion: string | null;
+  email: string | null;
+  whatsappDisplay: string | null;
+  whatsappUrl: string | null;
+  socialLinks: Array<{ label: string; url: string }>;
+  homeVideoUrl: string | null;
+  homeVideoFile: ACFFile | null;
+  homeVideoTitle: string | null;
+  homeVideoDescription: string | null;
+  homeVideoStart: number | null;
+}
+
+export type EditorialPageSlug = "sobre" | "contato" | "arquivo" | "eventos" | "cursos";
+
+export interface EditorialPageLinkACF {
+  label?: ACFValue<string>;
+  title?: ACFValue<string>;
+  url?: ACFValue<string>;
+  href?: ACFValue<string>;
+}
+
+export interface ComplementarySectionACF {
+  title?: ACFValue<string>;
+  titulo?: ACFValue<string>;
+  items?: ACFValue<unknown>;
+  itens?: ACFValue<unknown>;
+}
+
+export interface EditorialPageACF {
+  intro?: ACFValue<string>;
+  whatsapp_note?: ACFValue<string>;
+  slider_imagens?: ACFValue<Array<ACFMediaValue<ACFImage>>>;
+  identity_title?: ACFValue<string>;
+  identity_paragraphs?: ACFValue<string | string[]>;
+  origin_title?: ACFValue<string>;
+  origin_paragraphs?: ACFValue<string | string[]>;
+  letter_quote?: ACFValue<string>;
+  letter_attribution?: ACFValue<string>;
+  letter_note?: ACFValue<string>;
+  practices_title?: ACFValue<string>;
+  practices_intro?: ACFValue<string>;
+  practices_items?: ACFValue<unknown>;
+  practices_note?: ACFValue<string>;
+  territory_title?: ACFValue<string>;
+  territory_paragraphs?: ACFValue<string | string[]>;
+  territory_image?: ACFMediaValue<ACFImage>;
+  luanda_title?: ACFValue<string>;
+  luanda_paragraphs?: ACFValue<string | string[]>;
+  luanda_image?: ACFMediaValue<ACFImage>;
+  complementary_title?: ACFValue<string>;
+  complementary_sections?: ACFValue<ComplementarySectionACF[]>;
+  page_links?: ACFValue<EditorialPageLinkACF[]>;
+}
+
+export interface WordPressEditorialPage {
+  id: number;
+  slug: string;
+  title?: string;
+  content?: string;
+  acf: EditorialPageACF;
+}
+
+export interface ComplementarySectionContent {
+  title: string;
+  items: string[];
+}
+
+export interface EditorialPageLink {
+  label: string;
+  url: string;
+}
+
+export interface EditorialPageContent {
+  slug: string;
+  title: string;
+  intro: string | null;
+  whatsappNote: string | null;
+  sliderImages: ACFImage[];
+  identityTitle: string | null;
+  identityParagraphs: string[];
+  originTitle: string | null;
+  originParagraphs: string[];
+  letterQuote: string | null;
+  letterAttribution: string | null;
+  letterNote: string | null;
+  practicesTitle: string | null;
+  practicesIntro: string | null;
+  practicesItems: string[];
+  practicesNote: string | null;
+  territoryTitle: string | null;
+  territoryParagraphs: string[];
+  territoryImage: ACFImage | null;
+  luandaTitle: string | null;
+  luandaParagraphs: string[];
+  luandaImage: ACFImage | null;
+  complementaryTitle: string | null;
+  complementarySections: ComplementarySectionContent[];
+  pageLinks: EditorialPageLink[];
+}
+
+export interface ResolvedEditorialMedia {
+  sliderImages: ACFImage[];
+  territoryImage: ACFImage | null;
+  luandaImage: ACFImage | null;
 }

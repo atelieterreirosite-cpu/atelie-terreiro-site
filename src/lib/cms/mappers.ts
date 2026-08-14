@@ -2,21 +2,28 @@ import type {
   ACFFile,
   ACFImage,
   CMSItem,
+  ComplementarySectionContent,
   CourseACF,
   CourseContent,
+  EditorialPageContent,
+  EditorialPageLink,
   EventACF,
   EventContent,
   ExhibitionACF,
   ExhibitionContent,
   NormalizedBaseContent,
+  OptionsContent,
   ProjectACF,
   ProjectContent,
   PublicationACF,
   PublicationContent,
+  ResolvedEditorialMedia,
   VideoACF,
   VideoContent,
   VideoPlatform,
+  WordPressEditorialPage,
   WordPressMedia,
+  WordPressOptions,
   WordPressPost,
   WorkACF,
   WorkContent,
@@ -27,6 +34,11 @@ type UnknownRecord = Record<string, unknown>;
 export interface ResolvedPostMedia {
   image: ACFImage | null;
   attachment: ACFFile | null;
+}
+
+export interface ResolvedProjectMedia extends ResolvedPostMedia {
+  videoFile: ACFFile | null;
+  gallery: ACFImage[];
 }
 
 function isRecord(value: unknown): value is UnknownRecord {
@@ -80,6 +92,92 @@ export function normalizeText(value: unknown): string | null {
   }
 
   return null;
+}
+
+function decodeBasicEntities(value: string): string {
+  return value
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+}
+
+/**
+ * Editorial fields are plain text in CMS v3. Leftover markup from previous
+ * WYSIWYG fields is converted to text with line breaks — never rendered as HTML.
+ */
+export function normalizeEditorialText(value: unknown): string | null {
+  if (typeof value !== "string") return normalizeText(value);
+
+  const raw = value.replace(/\r\n/g, "\n").trim();
+  if (!raw) return null;
+
+  const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(raw);
+  if (!looksLikeHtml) {
+    return raw.replace(/\n{3,}/g, "\n\n") || null;
+  }
+
+  const withBreaks = raw
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<\/h[1-6]>/gi, "\n\n")
+    .replace(/<\/div>/gi, "\n")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "");
+
+  const stripped = decodeBasicEntities(withBreaks.replace(/<[^>]+>/g, ""));
+  return stripped.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim() || null;
+}
+
+export function splitEditorialParagraphs(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => normalizeEditorialText(entry))
+      .filter((entry): entry is string => Boolean(entry));
+  }
+
+  const text = normalizeEditorialText(value);
+  if (!text) return [];
+  return text
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+}
+
+export function normalizeStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return splitEditorialParagraphs(value);
+
+  const items: string[] = [];
+  for (const entry of value) {
+    if (typeof entry === "string" || typeof entry === "number") {
+      const text = normalizeEditorialText(entry);
+      if (text) items.push(text);
+      continue;
+    }
+
+    if (isRecord(entry)) {
+      const text = normalizeEditorialText(
+        entry.item ?? entry.label ?? entry.title ?? entry.texto ?? entry.name,
+      );
+      if (text) items.push(text);
+    }
+  }
+
+  return items;
+}
+
+function normalizeStartSeconds(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
+    return Math.floor(value);
+  }
+
+  const text = normalizeText(value);
+  if (!text) return null;
+
+  const parsed = Number(text);
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : null;
 }
 
 export function normalizeBoolean(value: unknown): boolean {
@@ -225,8 +323,8 @@ function baseContent<TACF extends { titulo?: unknown; resumo?: unknown; descrica
       normalizeText(post.acf.titulo) ??
       normalizeText(post.title?.rendered) ??
       `Conteúdo #${post.id}`,
-    summary: normalizeText(post.acf.resumo),
-    descriptionHtml: normalizeText(post.acf.descricao),
+    summary: normalizeEditorialText(post.acf.resumo),
+    descriptionText: normalizeEditorialText(post.acf.descricao),
     image: media.image,
     attachment: media.attachment,
     externalLink: safeHttpUrl(post.acf.link_externo),
@@ -250,7 +348,10 @@ function item<TACF extends { titulo?: unknown; resumo?: unknown; descricao?: unk
   };
 }
 
-export function mapProject(post: WordPressPost<ProjectACF>, media: ResolvedPostMedia): ProjectContent {
+export function mapProject(
+  post: WordPressPost<ProjectACF>,
+  media: ResolvedProjectMedia,
+): ProjectContent {
   return item(post, media, {
     startYear: normalizeText(post.acf.ano_inicio),
     endYear: normalizeText(post.acf.ano_fim),
@@ -259,6 +360,8 @@ export function mapProject(post: WordPressPost<ProjectACF>, media: ResolvedPostM
     participants: normalizeText(post.acf.participantes),
     curation: normalizeText(post.acf.curadoria_coordenacao),
     videoUrl: safeHttpUrl(post.acf.video_url),
+    videoFile: media.videoFile,
+    gallery: media.gallery,
   });
 }
 
@@ -294,7 +397,11 @@ export function mapCourse(post: WordPressPost<CourseACF>, media: ResolvedPostMed
   });
 }
 
-export function mapWork(post: WordPressPost<WorkACF>, media: ResolvedPostMedia): WorkContent {
+export function mapWork(
+  post: WordPressPost<WorkACF>,
+  media: ResolvedPostMedia,
+  videoFile: ACFFile | null,
+): WorkContent {
   return item(post, media, {
     artist: normalizeText(post.acf.artista),
     year: normalizeText(post.acf.ano),
@@ -302,6 +409,7 @@ export function mapWork(post: WordPressPost<WorkACF>, media: ResolvedPostMedia):
     dimensions: normalizeText(post.acf.dimensoes),
     relatedProjectId: normalizeRelationId(post.acf.projeto_relacionado),
     videoUrl: safeHttpUrl(post.acf.video_url),
+    videoFile,
     credits: normalizeText(post.acf.creditos),
   });
 }
@@ -351,4 +459,111 @@ export function mapVideo(
     relatedEventId: normalizeRelationId(post.acf.evento_relacionado),
     credits: normalizeText(post.acf.creditos),
   });
+}
+
+function mapSocialLinks(value: unknown): Array<{ label: string; url: string }> {
+  if (!Array.isArray(value)) return [];
+
+  const links: Array<{ label: string; url: string }> = [];
+  for (const entry of value) {
+    if (!isRecord(entry)) continue;
+    const label = normalizeText(entry.label);
+    const url = safeHttpUrl(entry.url);
+    if (label && url) links.push({ label, url });
+  }
+
+  return links;
+}
+
+function mapPageLinks(value: unknown): EditorialPageLink[] {
+  if (!Array.isArray(value)) return [];
+
+  const links: EditorialPageLink[] = [];
+  for (const entry of value) {
+    if (!isRecord(entry)) continue;
+    const label = normalizeText(entry.label ?? entry.title);
+    const rawUrl = normalizeText(entry.url ?? entry.href);
+    if (!label || !rawUrl) continue;
+
+    const url =
+      rawUrl.startsWith("/") && !rawUrl.endsWith("/") ? `${rawUrl}/` : rawUrl;
+    links.push({ label, url });
+  }
+
+  return links;
+}
+
+function mapComplementarySections(value: unknown): ComplementarySectionContent[] {
+  if (!Array.isArray(value)) return [];
+
+  const sections: ComplementarySectionContent[] = [];
+  for (const entry of value) {
+    if (!isRecord(entry)) continue;
+    const title = normalizeEditorialText(entry.title ?? entry.titulo) ?? "";
+    const items = normalizeStringList(entry.items ?? entry.itens ?? entry.item);
+    if (!title && items.length === 0) continue;
+    sections.push({ title, items });
+  }
+
+  return sections;
+}
+
+export function mapOptions(
+  payload: WordPressOptions,
+  homeVideoFile: ACFFile | null,
+): OptionsContent {
+  const acf = payload.acf ?? {};
+
+  return {
+    siteName: normalizeText(acf.site_name),
+    siteTagline: normalizeEditorialText(acf.site_tagline),
+    addressStreet: normalizeText(acf.address_street),
+    addressNeighborhood: normalizeText(acf.address_neighborhood),
+    addressCity: normalizeText(acf.address_city),
+    addressRegion: normalizeText(acf.address_region),
+    email: normalizeText(acf.email),
+    whatsappDisplay: normalizeText(acf.whatsapp_display),
+    whatsappUrl: safeHttpUrl(acf.whatsapp_url),
+    socialLinks: mapSocialLinks(acf.social_links),
+    homeVideoUrl: safeHttpUrl(acf.home_video_url),
+    homeVideoFile,
+    homeVideoTitle: normalizeText(acf.home_video_title),
+    homeVideoDescription: normalizeEditorialText(acf.home_video_description),
+    homeVideoStart: normalizeStartSeconds(acf.home_video_start),
+  };
+}
+
+export function mapEditorialPage(
+  payload: WordPressEditorialPage,
+  media: ResolvedEditorialMedia,
+): EditorialPageContent {
+  const acf = payload.acf ?? {};
+
+  return {
+    slug: payload.slug,
+    title: normalizeText(payload.title) ?? payload.slug,
+    intro: normalizeEditorialText(acf.intro),
+    whatsappNote: normalizeEditorialText(acf.whatsapp_note),
+    sliderImages: media.sliderImages,
+    identityTitle: normalizeText(acf.identity_title),
+    identityParagraphs: splitEditorialParagraphs(acf.identity_paragraphs),
+    originTitle: normalizeText(acf.origin_title),
+    originParagraphs: splitEditorialParagraphs(acf.origin_paragraphs),
+    letterQuote: normalizeEditorialText(acf.letter_quote),
+    letterAttribution: normalizeText(acf.letter_attribution),
+    letterNote: normalizeEditorialText(acf.letter_note),
+    practicesTitle: normalizeText(acf.practices_title),
+    practicesIntro: normalizeEditorialText(acf.practices_intro),
+    practicesItems: normalizeStringList(acf.practices_items),
+    practicesNote: normalizeEditorialText(acf.practices_note),
+    territoryTitle: normalizeText(acf.territory_title),
+    territoryParagraphs: splitEditorialParagraphs(acf.territory_paragraphs),
+    territoryImage: media.territoryImage,
+    luandaTitle: normalizeText(acf.luanda_title),
+    luandaParagraphs: splitEditorialParagraphs(acf.luanda_paragraphs),
+    luandaImage: media.luandaImage,
+    complementaryTitle: normalizeText(acf.complementary_title),
+    complementarySections: mapComplementarySections(acf.complementary_sections),
+    pageLinks: mapPageLinks(acf.page_links),
+  };
 }
