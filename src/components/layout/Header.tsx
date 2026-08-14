@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { mainNavigation } from "@/data/navigation";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -36,7 +37,12 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
   const pathname = usePathname();
   const prefersReducedMotion = usePrefersReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const isOverlay = variant === "overlay";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -63,12 +69,15 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
   }, [menuOpen]);
 
   const headerClass = isOverlay
-    ? "fixed inset-x-0 top-0 z-50 bg-gradient-to-b from-black/50 via-black/20 to-transparent pt-[env(safe-area-inset-top)]"
-    : "sticky top-0 z-50 border-b border-border/60 bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur-sm supports-[backdrop-filter]:bg-background/90";
+    ? `fixed inset-x-0 top-0 bg-gradient-to-b from-black/50 via-black/20 to-transparent pt-[env(safe-area-inset-top)] ${menuOpen ? "z-[60]" : "z-50"}`
+    : menuOpen
+      ? "sticky top-0 z-[60] bg-transparent pt-[env(safe-area-inset-top)]"
+      : "sticky top-0 z-50 border-b border-border/60 bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur-sm supports-[backdrop-filter]:bg-background/90";
 
-  const logoClass = isOverlay
-    ? "font-display text-xl font-light tracking-wide text-white transition-opacity duration-300 hover:opacity-80 motion-reduce:transition-none md:text-2xl"
-    : "font-display text-xl font-light tracking-wide text-foreground transition-opacity duration-300 hover:opacity-70 motion-reduce:transition-none md:text-2xl";
+  const logoClass =
+    isOverlay || menuOpen
+      ? "font-display text-xl font-light tracking-wide text-white transition-opacity duration-300 hover:opacity-80 motion-reduce:transition-none md:text-2xl"
+      : "font-display text-xl font-light tracking-wide text-foreground transition-opacity duration-300 hover:opacity-70 motion-reduce:transition-none md:text-2xl";
 
   const menuButtonClass =
     isOverlay || menuOpen
@@ -86,6 +95,48 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
 
     return `${base} ${active ? "text-foreground link-underline-active" : "text-foreground/80 hover:text-foreground"}`;
   };
+
+  const mobileMenu = (
+    <div
+      id="mobile-menu"
+      className={`fixed inset-0 z-[55] flex flex-col bg-black/95 pt-[env(safe-area-inset-top)] transition-all duration-500 motion-reduce:transition-none lg:hidden ${
+        menuOpen
+          ? "visible opacity-100"
+          : "invisible pointer-events-none opacity-0"
+      }`}
+      aria-hidden={!menuOpen}
+    >
+      <nav
+        className="flex flex-1 flex-col items-center justify-center gap-6 px-6 sm:gap-8"
+        aria-label="Navegação mobile"
+      >
+        {mainNavigation.map((item, index) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`font-display text-2xl font-light tracking-wide transition-all duration-300 motion-reduce:transition-none sm:text-3xl ${
+              isActivePath(pathname, item.href)
+                ? "text-white"
+                : "text-white/90 hover:text-white"
+            }`}
+            style={
+              prefersReducedMotion
+                ? undefined
+                : {
+                    transitionDelay: menuOpen ? `${index * 50 + 100}ms` : "0ms",
+                    opacity: menuOpen ? 1 : 0,
+                    transform: menuOpen ? "translateY(0)" : "translateY(12px)",
+                  }
+            }
+            aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+            onClick={() => setMenuOpen(false)}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+    </div>
+  );
 
   return (
     <header className={headerClass}>
@@ -137,45 +188,7 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
         </button>
       </div>
 
-      <div
-        id="mobile-menu"
-        className={`fixed inset-0 z-[55] flex flex-col bg-black/95 pt-[env(safe-area-inset-top)] transition-all duration-500 motion-reduce:transition-none lg:hidden ${
-          menuOpen
-            ? "visible opacity-100"
-            : "invisible pointer-events-none opacity-0"
-        }`}
-        aria-hidden={!menuOpen}
-      >
-        <nav
-          className="flex flex-1 flex-col items-center justify-center gap-6 px-6 sm:gap-8"
-          aria-label="Navegação mobile"
-        >
-          {mainNavigation.map((item, index) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`font-display text-2xl font-light tracking-wide transition-all duration-300 motion-reduce:transition-none sm:text-3xl ${
-                isActivePath(pathname, item.href)
-                  ? "text-white"
-                  : "text-white/90 hover:text-white"
-              }`}
-              style={
-                prefersReducedMotion
-                  ? undefined
-                  : {
-                      transitionDelay: menuOpen ? `${index * 50 + 100}ms` : "0ms",
-                      opacity: menuOpen ? 1 : 0,
-                      transform: menuOpen ? "translateY(0)" : "translateY(12px)",
-                    }
-              }
-              aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
-              onClick={() => setMenuOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
+      {mounted ? createPortal(mobileMenu, document.body) : null}
     </header>
   );
 }
