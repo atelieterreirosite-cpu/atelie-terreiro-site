@@ -53,6 +53,8 @@ export interface ProjectView {
   participants?: string;
   curation?: string;
   location?: string;
+  /** ACF `link_externo` — CTA só quando houver URL válida. */
+  externalLink?: string;
 }
 
 export interface ArchivePageView {

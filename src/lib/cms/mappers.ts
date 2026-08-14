@@ -493,11 +493,36 @@ function mapPageLinks(value: unknown): EditorialPageLink[] {
   return links;
 }
 
+function parseComplementaryJson(raw: string): unknown {
+  const text = decodeBasicEntities(raw.replace(/\r\n/g, "\n")).trim();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    try {
+      return JSON.parse(text.replace(/}\s*{/g, "},{"));
+    } catch {
+      return null;
+    }
+  }
+}
+
 function mapComplementarySections(value: unknown): ComplementarySectionContent[] {
-  if (!Array.isArray(value)) return [];
+  let parsed: unknown = value;
+
+  if (typeof value === "string") {
+    parsed = parseComplementaryJson(value);
+  }
+
+  if (isRecord(parsed) && !Array.isArray(parsed)) {
+    parsed = [parsed];
+  }
+
+  if (!Array.isArray(parsed)) return [];
 
   const sections: ComplementarySectionContent[] = [];
-  for (const entry of value) {
+  for (const entry of parsed) {
     if (!isRecord(entry)) continue;
     const title = normalizeEditorialText(entry.title ?? entry.titulo) ?? "";
     const items = normalizeStringList(entry.items ?? entry.itens ?? entry.item);

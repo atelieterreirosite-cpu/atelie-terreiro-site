@@ -45,6 +45,7 @@ export function mapProjectToView(item: ProjectContent): ProjectView {
     participants: item.details.participants ?? undefined,
     curation: item.details.curation ?? undefined,
     location: item.details.location ?? undefined,
+    externalLink: item.content.externalLink ?? undefined,
   };
 }
 

@@ -4,7 +4,7 @@ import { EditorialText } from "@/components/ui/EditorialText";
 import { ImageSlider } from "@/components/ui/ImageSlider";
 import { MediaPlaceholder } from "@/components/ui/MediaPlaceholder";
 import { VideoEmbed } from "@/components/ui/VideoEmbed";
-import type { ImageAsset, ProjectView } from "@/types/views";
+import type { ContentVideo, ImageAsset, ProjectView } from "@/types/views";
 
 interface ProjectDetailProps {
   project: ProjectView;
@@ -20,8 +20,20 @@ function resolveSliderImages(project: ProjectView): ImageAsset[] {
   return [];
 }
 
+function ProjectVideo({ video }: { video: ContentVideo }) {
+  return (
+    <div className="relative aspect-video overflow-hidden bg-accent">
+      <VideoEmbed
+        video={video}
+        className="absolute inset-0 h-full w-full border-0"
+      />
+    </div>
+  );
+}
+
 export function ProjectDetail({ project }: ProjectDetailProps) {
   const sliderImages = resolveSliderImages(project);
+  const videoAsHero = Boolean(project.video) && sliderImages.length === 0;
 
   return (
     <article className="pb-24">
@@ -53,6 +65,8 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
       <div className="mx-auto mt-12 max-w-7xl px-6 md:px-10">
         {sliderImages.length > 0 ? (
           <ImageSlider images={sliderImages} label={`Imagens de ${project.title}`} />
+        ) : project.video ? (
+          <ProjectVideo video={project.video} />
         ) : (
           <MediaPlaceholder />
         )}
@@ -67,6 +81,17 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
               className="text-base leading-relaxed text-foreground/90"
             />
           </section>
+        ) : null}
+
+        {project.externalLink ? (
+          <a
+            href={project.externalLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link-underline inline-block text-sm tracking-[0.12em] text-foreground uppercase"
+          >
+            Link externo →
+          </a>
         ) : null}
 
         {(project.participants || project.curation || project.location) && (
@@ -97,16 +122,11 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           </section>
         )}
 
-        {project.video ? (
+        {project.video && !videoAsHero ? (
           <section className="space-y-8">
             <h2 className="text-xs tracking-[0.15em] text-muted-light uppercase">Vídeo</h2>
             <div className="space-y-3">
-              <div className="relative aspect-video overflow-hidden bg-accent">
-                <VideoEmbed
-                  video={project.video}
-                  className="absolute inset-0 h-full w-full border-0"
-                />
-              </div>
+              <ProjectVideo video={project.video} />
               {project.video.description ? (
                 <p className="text-sm text-muted">{project.video.description}</p>
               ) : null}

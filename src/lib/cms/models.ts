@@ -382,7 +382,7 @@ export interface EditorialPageACF {
   luanda_paragraphs?: ACFValue<string | string[]>;
   luanda_image?: ACFMediaValue<ACFImage>;
   complementary_title?: ACFValue<string>;
-  complementary_sections?: ACFValue<ComplementarySectionACF[]>;
+  complementary_sections?: ACFValue<string | ComplementarySectionACF[]>;
   page_links?: ACFValue<EditorialPageLinkACF[]>;
 }
 
