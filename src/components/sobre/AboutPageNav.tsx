@@ -32,6 +32,15 @@ interface AboutLinksProps {
   links: RelatedLink[];
 }
 
+/** Rótulo público da seção; href `/arquivo/` permanece. */
+function publicLinkLabel(link: RelatedLink): string {
+  const path = link.href.replace(/\/$/, "") || "/";
+  if (path === "/arquivo" && (link.label === "Arquivo" || link.label === "Arquivo / Portfólio")) {
+    return "Portfólio";
+  }
+  return link.label;
+}
+
 export function AboutLinks({ links }: AboutLinksProps) {
   return (
     <section className="space-y-6 border-t border-border pt-12">
@@ -43,7 +52,7 @@ export function AboutLinks({ links }: AboutLinksProps) {
               href={link.href}
               className="link-underline font-display text-xl font-light tracking-wide text-foreground/85 transition-colors duration-300 hover:text-foreground md:text-2xl"
             >
-              {link.label}
+              {publicLinkLabel(link)}
             </Link>
           </li>
         ))}

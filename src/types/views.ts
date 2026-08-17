@@ -63,6 +63,83 @@ export interface ArchivePageView {
   sliderImages: ImageAsset[];
 }
 
+export interface WorkAttachment {
+  url: string;
+  label: string;
+}
+
+export interface WorkView {
+  slug: string;
+  title: string;
+  artist?: string;
+  year?: string;
+  technique?: string;
+  dimensions?: string;
+  excerpt: string;
+  descriptionText: string | null;
+  credits?: string;
+  featuredImage?: ImageAsset;
+  video?: ContentVideo;
+  attachment?: WorkAttachment;
+  /** ACF `link_externo` — CTA só quando houver URL válida. */
+  externalLink?: string;
+}
+
+export interface ExhibitionView {
+  slug: string;
+  title: string;
+  /** Período formatado (`data_inicio` – `data_fim`). */
+  period: string;
+  startDate?: string;
+  endDate?: string;
+  /** ACF `em_cartaz` — só true dispara o badge “Em cartaz”. */
+  onDisplay: boolean;
+  location?: string;
+  city?: string;
+  curation?: string;
+  artists?: string;
+  excerpt: string;
+  descriptionText: string | null;
+  featuredImage?: ImageAsset;
+  attachment?: WorkAttachment;
+  /** ACF `link_externo` — CTA só quando houver URL válida. */
+  externalLink?: string;
+}
+
+export interface PublicationView {
+  slug: string;
+  title: string;
+  /** ACF `tipo_publicacao`. */
+  publicationType?: string;
+  authors?: string;
+  year?: string;
+  excerpt: string;
+  descriptionText: string | null;
+  credits?: string;
+  featuredImage?: ImageAsset;
+  attachment?: WorkAttachment;
+  /** ACF `link_externo` — CTA só quando houver URL válida. */
+  externalLink?: string;
+}
+
+export interface VideoView {
+  slug: string;
+  title: string;
+  /** ACF `plataforma`. */
+  platform?: string;
+  duration?: string;
+  publicationDate?: string;
+  participants?: string;
+  excerpt: string;
+  descriptionText: string | null;
+  credits?: string;
+  featuredImage?: ImageAsset;
+  /** Resolvido via `mapContentVideo` (`arquivo_video` > `video_url`). */
+  video?: ContentVideo;
+  /** ACF `link_externo` — CTA só quando houver URL válida. */
+  externalLink?: string;
+}
+
 export type EventStatus = "futuro" | "em-andamento" | "encerrado";
 
 /** UI temporária — o CMS hoje só expõe `evento_online`. */

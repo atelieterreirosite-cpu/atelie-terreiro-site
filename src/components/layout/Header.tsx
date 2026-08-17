@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { mainNavigation } from "@/data/navigation";
+import {
+  isActivePath,
+  isNavItemActive,
+  mainNavigation,
+} from "@/data/navigation";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import type { NavItem } from "@/types/site";
 
 type HeaderVariant = "overlay" | "solid";
 
@@ -15,30 +20,139 @@ interface HeaderProps {
   siteName: string;
 }
 
-function normalizePath(pathname: string): string {
-  if (pathname.length > 1 && pathname.endsWith("/")) {
-    return pathname.slice(0, -1);
-  }
-  return pathname || "/";
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 12 12"
+      width="10"
+      height="10"
+      aria-hidden="true"
+      className={`shrink-0 transition-transform duration-300 motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
+    >
+      <path
+        d="M2.5 4.25 6 7.75l3.5-3.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="square"
+      />
+    </svg>
+  );
 }
 
-function isActivePath(pathname: string, href: string): boolean {
-  const current = normalizePath(pathname);
-  const target = normalizePath(href);
+function DesktopPortfolioItem({
+  item,
+  variant,
+  pathname,
+  getNavLinkClass,
+}: {
+  item: NavItem;
+  variant: HeaderVariant;
+  pathname: string;
+  getNavLinkClass: (href: string, active?: boolean) => string;
+}) {
+  const children = item.children ?? [];
+  const submenuId = useId();
+  const wrapRef = useRef<HTMLLIElement>(null);
+  const [open, setOpen] = useState(false);
+  const sectionActive = isNavItemActive(pathname, item);
 
-  if (target === "/") {
-    return current === "/";
-  }
+  useEffect(() => {
+    if (!open) return;
 
-  return current === target || current.startsWith(`${target}/`);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
+
+  const panelClass =
+    variant === "overlay"
+      ? "absolute left-0 top-full z-50 min-w-[13rem] border border-white/15 bg-black/90 py-2"
+      : "absolute left-0 top-full z-50 min-w-[13rem] border border-border/60 bg-background/95 py-2 backdrop-blur-sm";
+
+  const childClass = (href: string) => {
+    const active = isActivePath(pathname, href);
+    const base =
+      "block px-4 py-2.5 text-sm tracking-[0.12em] uppercase transition-colors duration-300 motion-reduce:transition-none";
+
+    if (variant === "overlay") {
+      return `${base} ${active ? "text-white" : "text-white/80 hover:text-white"}`;
+    }
+
+    return `${base} ${active ? "text-foreground" : "text-foreground/75 hover:text-foreground"}`;
+  };
+
+  return (
+    <li
+      ref={wrapRef}
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        className={`${getNavLinkClass(item.href, sectionActive)} inline-flex items-center gap-1.5`}
+        aria-expanded={open}
+        aria-controls={submenuId}
+        aria-haspopup="true"
+        onClick={(event) => {
+          if (event.detail === 0) {
+            setOpen((current) => !current);
+            return;
+          }
+          setOpen(true);
+        }}
+        onBlur={() => {
+          requestAnimationFrame(() => {
+            if (!wrapRef.current?.contains(document.activeElement)) {
+              setOpen(false);
+            }
+          });
+        }}
+      >
+        {item.label}
+        <Chevron open={open} />
+      </button>
+
+      <ul
+        id={submenuId}
+        className={`${panelClass} ${open ? "visible opacity-100" : "invisible pointer-events-none opacity-0"}`}
+        hidden={!open}
+      >
+        {children.map((child) => {
+          const active = isActivePath(pathname, child.href);
+
+          return (
+            <li key={child.href}>
+              <Link
+                href={child.href}
+                className={childClass(child.href)}
+                aria-current={active ? "page" : undefined}
+                onClick={() => setOpen(false)}
+              >
+                {child.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </li>
+  );
 }
 
 export function Header({ variant = "solid", siteName }: HeaderProps) {
   const pathname = usePathname();
   const prefersReducedMotion = usePrefersReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [portfolioOpen, setPortfolioOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const isOverlay = variant === "overlay";
+  const mobileSubmenuId = useId();
 
   useEffect(() => {
     setMounted(true);
@@ -46,6 +160,7 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
 
   useEffect(() => {
     setMenuOpen(false);
+    setPortfolioOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -56,7 +171,15 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
   }, [menuOpen]);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen) {
+      setPortfolioOpen(false);
+      return;
+    }
+
+    const portfolioItem = mainNavigation.find((item) => item.children?.length);
+    if (portfolioItem && isNavItemActive(pathname, portfolioItem)) {
+      setPortfolioOpen(true);
+    }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -66,7 +189,7 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [menuOpen]);
+  }, [menuOpen, pathname]);
 
   const headerClass = isOverlay
     ? `fixed inset-x-0 top-0 bg-gradient-to-b from-black/50 via-black/20 to-transparent pt-[env(safe-area-inset-top)] ${menuOpen ? "z-[60]" : "z-50"}`
@@ -84,8 +207,8 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
       ? "text-white/90 hover:text-white"
       : "text-foreground/80 hover:text-foreground";
 
-  const getNavLinkClass = (href: string) => {
-    const active = isActivePath(pathname, href);
+  const getNavLinkClass = (href: string, activeOverride?: boolean) => {
+    const active = activeOverride ?? isActivePath(pathname, href);
     const base =
       "text-sm tracking-[0.12em] uppercase transition-colors duration-300 link-underline motion-reduce:transition-none";
 
@@ -107,33 +230,87 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
       aria-hidden={!menuOpen}
     >
       <nav
-        className="flex flex-1 flex-col items-center justify-center gap-6 px-6 sm:gap-8"
+        className="flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto px-6 py-16 sm:gap-8"
         aria-label="Navegação mobile"
       >
-        {mainNavigation.map((item, index) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`font-display text-2xl font-light tracking-wide transition-all duration-300 motion-reduce:transition-none sm:text-3xl ${
-              isActivePath(pathname, item.href)
-                ? "text-white"
-                : "text-white/90 hover:text-white"
-            }`}
-            style={
-              prefersReducedMotion
-                ? undefined
-                : {
-                    transitionDelay: menuOpen ? `${index * 50 + 100}ms` : "0ms",
-                    opacity: menuOpen ? 1 : 0,
-                    transform: menuOpen ? "translateY(0)" : "translateY(12px)",
-                  }
-            }
-            aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
-            onClick={() => setMenuOpen(false)}
-          >
-            {item.label}
-          </Link>
-        ))}
+        {mainNavigation.map((item, index) => {
+          const motionStyle = prefersReducedMotion
+            ? undefined
+            : {
+                transitionDelay: menuOpen ? `${index * 50 + 100}ms` : "0ms",
+                opacity: menuOpen ? 1 : 0,
+                transform: menuOpen ? "translateY(0)" : "translateY(12px)",
+              };
+
+          if (item.children?.length) {
+            const sectionActive = isNavItemActive(pathname, item);
+
+            return (
+              <div
+                key={item.label}
+                className="flex w-full max-w-xs flex-col items-center"
+                style={motionStyle}
+              >
+                <button
+                  type="button"
+                  className={`font-display inline-flex items-center gap-3 text-2xl font-light tracking-wide transition-all duration-300 motion-reduce:transition-none sm:text-3xl ${
+                    sectionActive ? "text-white" : "text-white/90 hover:text-white"
+                  }`}
+                  aria-expanded={portfolioOpen}
+                  aria-controls={mobileSubmenuId}
+                  onClick={() => setPortfolioOpen((current) => !current)}
+                >
+                  {item.label}
+                  <span aria-hidden="true" className="text-lg text-white/70">
+                    {portfolioOpen ? "−" : "+"}
+                  </span>
+                </button>
+
+                <ul
+                  id={mobileSubmenuId}
+                  className={`flex flex-col items-center gap-3 pt-4 ${portfolioOpen ? "" : "hidden"}`}
+                  hidden={!portfolioOpen}
+                >
+                  {item.children.map((child) => {
+                    const active = isActivePath(pathname, child.href);
+
+                    return (
+                      <li key={child.href}>
+                        <Link
+                          href={child.href}
+                          className={`font-display text-xl font-light tracking-wide transition-colors duration-300 motion-reduce:transition-none ${
+                            active ? "text-white" : "text-white/70 hover:text-white"
+                          }`}
+                          aria-current={active ? "page" : undefined}
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          {child.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          }
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`font-display text-2xl font-light tracking-wide transition-all duration-300 motion-reduce:transition-none sm:text-3xl ${
+                isActivePath(pathname, item.href)
+                  ? "text-white"
+                  : "text-white/90 hover:text-white"
+              }`}
+              style={motionStyle}
+              aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+              onClick={() => setMenuOpen(false)}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
     </div>
   );
@@ -156,16 +333,29 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
           className="hidden items-center gap-6 lg:flex xl:gap-8"
           aria-label="Navegação principal"
         >
-          {mainNavigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={getNavLinkClass(item.href)}
-              aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
-            >
-              {item.label}
-            </Link>
-          ))}
+          <ul className="flex items-center gap-6 xl:gap-8">
+            {mainNavigation.map((item) =>
+              item.children?.length ? (
+                <DesktopPortfolioItem
+                  key={item.label}
+                  item={item}
+                  variant={variant}
+                  pathname={pathname}
+                  getNavLinkClass={getNavLinkClass}
+                />
+              ) : (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={getNavLinkClass(item.href)}
+                    aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ),
+            )}
+          </ul>
         </nav>
 
         <button

@@ -38,7 +38,7 @@ export function Footer({ site }: FooterProps) {
           <nav aria-label="Navegação do rodapé">
             <ul className="space-y-2">
               {mainNavigation.map((item) => (
-                <li key={item.href}>
+                <li key={item.label}>
                   <Link
                     href={item.href}
                     className="link-underline text-sm text-foreground/80 transition-colors duration-300 hover:text-foreground motion-reduce:transition-none"

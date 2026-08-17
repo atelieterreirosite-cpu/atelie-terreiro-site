@@ -42,7 +42,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           href="/arquivo/"
           className="link-underline inline-flex items-center gap-2 text-xs tracking-[0.12em] text-muted uppercase transition-colors duration-300 hover:text-foreground"
         >
-          ← Arquivo
+          ← Projetos
         </Link>
       </div>
 

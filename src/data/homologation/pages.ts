@@ -11,7 +11,7 @@ const HOMOLOGATION =
   "Texto de homologação para validação de layout — substituir pelo conteúdo do WordPress.";
 
 export const archivePageContent: ArchivePageView = {
-  title: "Arquivo",
+  title: "Portfólio",
   intro: HOMOLOGATION,
   sliderImages: [
     homologationImage("dsc1740", 1),
