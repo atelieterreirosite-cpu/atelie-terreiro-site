@@ -131,6 +131,24 @@ export interface VideoACF extends Omit<BaseACFContent, "anexo"> {
   creditos?: ACFValue<string>;
 }
 
+export interface TeamLinkACF {
+  label?: ACFValue<string>;
+  href?: ACFValue<string>;
+  url?: ACFValue<string>;
+}
+
+export interface TeamACF {
+  titulo?: ACFValue<string>;
+  atuacao?: ACFValue<string>;
+  bio?: ACFValue<string>;
+  bio_completa?: ACFValue<string>;
+  imagem?: ACFMediaValue<ACFImage> | "";
+  areas?: ACFValue<string | string[]>;
+  links?: ACFValue<string | TeamLinkACF[]>;
+  ordem?: ACFValue<string | number>;
+  ativo?: ACFValue<boolean>;
+}
+
 export interface WordPressPost<TACF> {
   id: number;
   date: string;
@@ -277,6 +295,30 @@ export type WorkContent = CMSItem<WorkDetails>;
 export type PublicationContent = CMSItem<PublicationDetails>;
 export type ExhibitionContent = CMSItem<ExhibitionDetails>;
 export type VideoContent = CMSItem<VideoDetails>;
+
+export interface TeamLink {
+  label: string;
+  href: string;
+}
+
+/** Conteúdo normalizado do CPT `equipe` (estrutura própria, sem BaseACF). */
+export interface TeamContent {
+  id: number;
+  date: string;
+  modified: string;
+  slug: string;
+  status: string;
+  link: string;
+  title: string;
+  role: string | null;
+  bio: string | null;
+  bioFull: string | null;
+  image: ACFImage | null;
+  areas: string[];
+  links: TeamLink[];
+  order: number;
+  active: boolean;
+}
 
 export type CollectionStatus = "ok" | "error";
 

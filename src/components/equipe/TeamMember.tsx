@@ -1,12 +1,12 @@
 import Image from "next/image";
 
 import { MediaPlaceholder } from "@/components/ui/MediaPlaceholder";
-import type { TeamMemberMock } from "@/data/equipe";
+import type { TeamMemberView } from "@/types/views";
 
 import { TeamMemberBio } from "./TeamMemberBio";
 
 interface TeamMemberProps {
-  member: TeamMemberMock;
+  member: TeamMemberView;
   index: number;
 }
 
@@ -27,7 +27,8 @@ function padIndex(index: number): string {
 export function TeamMember({ member, index }: TeamMemberProps) {
   const imageOnRight = index % 2 === 1;
   const anchor = memberAnchor(member.name);
-  const hasImage = Boolean(member.image?.trim());
+  const imageSrc = member.image?.src?.trim();
+  const imageAlt = member.image?.alt?.trim() || `Retrato de ${member.name}`;
 
   return (
     <article
@@ -38,10 +39,10 @@ export function TeamMember({ member, index }: TeamMemberProps) {
         className={`lg:col-span-6 ${imageOnRight ? "lg:col-start-7" : "lg:col-start-1"}`}
       >
         <div className="relative aspect-[3/4] overflow-hidden bg-accent/5">
-          {hasImage ? (
+          {imageSrc ? (
             <Image
-              src={member.image!}
-              alt={`Retrato de ${member.name}`}
+              src={imageSrc}
+              alt={imageAlt}
               fill
               priority={index === 0}
               sizes="(max-width: 1024px) 100vw, 50vw"

@@ -243,3 +243,20 @@ export interface ContactPageView {
   intro: string;
   whatsappNote: string;
 }
+
+export interface TeamMemberLink {
+  label: string;
+  href: string;
+}
+
+/** View-model da página Equipe (CPT `equipe`). */
+export interface TeamMemberView {
+  slug: string;
+  name: string;
+  role?: string;
+  bio: string;
+  bioFull?: string;
+  image?: ImageAsset;
+  areas?: string[];
+  links?: TeamMemberLink[];
+}

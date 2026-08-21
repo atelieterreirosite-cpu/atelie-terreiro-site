@@ -18,6 +18,9 @@ import type {
   PublicationACF,
   PublicationContent,
   ResolvedEditorialMedia,
+  TeamACF,
+  TeamContent,
+  TeamLink,
   VideoACF,
   VideoContent,
   VideoPlatform,
@@ -459,6 +462,115 @@ export function mapVideo(
     relatedEventId: normalizeRelationId(post.acf.evento_relacionado),
     credits: normalizeText(post.acf.creditos),
   });
+}
+
+/**
+ * Áreas do CPT equipe: array real, JSON em string, ou lista simples.
+ * JSON malformado → [] (não inventa itens).
+ */
+export function normalizeTeamAreas(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => normalizeText(entry))
+      .filter((entry): entry is string => Boolean(entry));
+  }
+
+  if (value === false || value === null || value === undefined) return [];
+  if (typeof value !== "string") return [];
+
+  const text = value.trim();
+  if (!text) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((entry) => normalizeText(entry))
+      .filter((entry): entry is string => Boolean(entry));
+  } catch {
+    if (text.startsWith("[")) return [];
+    return text
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
+}
+
+function coerceTeamLinkEntries(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (value === false || value === null || value === undefined) return [];
+  if (typeof value !== "string") return [];
+
+  const text = value.trim();
+  if (!text) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    // Near-JSON do ACF (chaves sem aspas): { label: "...", href: "..." }
+    const nearJson = text.replace(/([{,]\s*)([A-Za-z_][\w]*)\s*:/g, '$1"$2":');
+    try {
+      const parsed: unknown = JSON.parse(nearJson);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+}
+
+/**
+ * Links do CPT equipe: array, JSON ou near-JSON.
+ * Mantém só entradas com label e href http(s) válidos.
+ */
+export function normalizeTeamLinks(value: unknown): TeamLink[] {
+  const links: TeamLink[] = [];
+
+  for (const entry of coerceTeamLinkEntries(value)) {
+    if (!isRecord(entry)) continue;
+    const label = normalizeText(entry.label);
+    const href = safeHttpUrl(entry.href ?? entry.url);
+    if (label && href) links.push({ label, href });
+  }
+
+  return links;
+}
+
+function normalizeTeamOrder(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return Number.POSITIVE_INFINITY;
+}
+
+export function mapTeamMember(
+  post: WordPressPost<TeamACF>,
+  image: ACFImage | null,
+): TeamContent {
+  return {
+    id: post.id,
+    date: post.date,
+    modified: post.modified,
+    slug: post.slug,
+    status: post.status,
+    link: post.link,
+    title:
+      normalizeText(post.acf.titulo) ??
+      normalizeText(post.title?.rendered) ??
+      `Integrante #${post.id}`,
+    role: normalizeText(post.acf.atuacao),
+    bio: normalizeEditorialText(post.acf.bio),
+    bioFull: normalizeEditorialText(post.acf.bio_completa),
+    image,
+    areas: normalizeTeamAreas(post.acf.areas),
+    links: normalizeTeamLinks(post.acf.links),
+    order: normalizeTeamOrder(post.acf.ordem),
+    active: normalizeBoolean(post.acf.ativo),
+  };
 }
 
 function mapSocialLinks(value: unknown): Array<{ label: string; url: string }> {

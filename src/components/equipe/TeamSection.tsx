@@ -1,9 +1,9 @@
-import type { TeamMemberMock } from "@/data/equipe";
+import type { TeamMemberView } from "@/types/views";
 
 import { TeamMember } from "./TeamMember";
 
 interface TeamSectionProps {
-  members: TeamMemberMock[];
+  members: TeamMemberView[];
 }
 
 export function TeamSection({ members }: TeamSectionProps) {
@@ -18,7 +18,7 @@ export function TeamSection({ members }: TeamSectionProps) {
     >
       <div className="space-y-24 md:space-y-32 lg:space-y-40">
         {members.map((member, index) => (
-          <TeamMember key={member.name} member={member} index={index} />
+          <TeamMember key={member.slug || member.name} member={member} index={index} />
         ))}
       </div>
     </section>

@@ -9,6 +9,7 @@ import {
   mapOptions,
   mapProject,
   mapPublication,
+  mapTeamMember,
   mapVideo,
   mapWork,
   normalizeFile,
@@ -33,6 +34,8 @@ import type {
   ProjectContent,
   PublicationACF,
   PublicationContent,
+  TeamACF,
+  TeamContent,
   VideoACF,
   VideoContent,
   WordPressEditorialPage,
@@ -51,6 +54,7 @@ const ENDPOINTS = {
   publications: "publicacao",
   exhibitions: "exposicao",
   videos: "video",
+  team: "equipe",
 } as const;
 
 const mediaCache = new Map<number, Promise<WordPressMedia>>();
@@ -200,6 +204,13 @@ export async function getVideos(): Promise<VideoContent[]> {
       ]);
       return mapVideo(post, media, videoFile);
     }),
+  );
+}
+
+export async function getTeam(): Promise<TeamContent[]> {
+  const posts = await fetchCollection<TeamACF>(ENDPOINTS.team);
+  return Promise.all(
+    posts.map(async (post) => mapTeamMember(post, await resolveImage(post.acf.imagem))),
   );
 }
 
