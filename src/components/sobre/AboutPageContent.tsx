@@ -16,7 +16,6 @@ export function AboutPageContentView({ content }: AboutPageContentProps) {
     content.origin ? { id: content.origin.id, label: "Origem" } : null,
     content.practices ? { id: content.practices.id, label: "Práticas" } : null,
     content.territory ? { id: content.territory.id, label: "Território" } : null,
-    content.luanda ? { id: content.luanda.id, label: "Luanda" } : null,
     content.complementary ? { id: "complementar", label: "Currículo" } : null,
   ].filter((item): item is { id: string; label: string } => item !== null);
 
@@ -45,7 +44,6 @@ export function AboutPageContentView({ content }: AboutPageContentProps) {
         ) : null}
 
         {content.territory ? <AboutSection block={content.territory} /> : null}
-        {content.luanda ? <AboutSection block={content.luanda} /> : null}
 
         {content.complementary ? (
           <AboutComplementary

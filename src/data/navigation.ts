@@ -19,6 +19,7 @@ export const mainNavigation: NavItem[] = [
   { label: "Portfólio", href: "/arquivo/", children: portfolioNavigation },
   { label: "Eventos", href: "/eventos/" },
   { label: "Cursos", href: "/cursos/" },
+  { label: "Equipe", href: "/equipe/" },
   { label: "Contato", href: "/contato/" },
 ];
 
