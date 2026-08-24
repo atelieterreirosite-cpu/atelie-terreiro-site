@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 
 import { TeamHero } from "@/components/equipe/TeamHero";
+import { TeamNetwork } from "@/components/equipe/TeamNetwork";
 import { TeamSection } from "@/components/equipe/TeamSection";
 import { SiteShell } from "@/components/layout/SiteShell";
+import { teamNetworkIntro } from "@/data/equipe-extra";
+import { loadGuias } from "@/lib/adapters/guia";
 import { loadTeam } from "@/lib/adapters/team";
 
 export const dynamic = "force-static";
@@ -13,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function EquipePage() {
-  const collection = await loadTeam();
+  const [collection, guias] = await Promise.all([loadTeam(), loadGuias()]);
 
   return (
     <SiteShell>
@@ -32,6 +35,14 @@ export default async function EquipePage() {
       ) : (
         <TeamSection members={collection.items} />
       )}
+      {guias.status === "ok" && guias.items.length > 0 ? (
+        <TeamNetwork
+          kicker={teamNetworkIntro.kicker}
+          title={teamNetworkIntro.title}
+          text={teamNetworkIntro.text}
+          members={guias.items}
+        />
+      ) : null}
     </SiteShell>
   );
 }

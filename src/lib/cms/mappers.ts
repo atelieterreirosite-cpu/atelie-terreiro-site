@@ -18,6 +18,8 @@ import type {
   PublicationACF,
   PublicationContent,
   ResolvedEditorialMedia,
+  GuiaACF,
+  GuiaContent,
   TeamACF,
   TeamContent,
   TeamLink,
@@ -570,6 +572,25 @@ export function mapTeamMember(
     links: normalizeTeamLinks(post.acf.links),
     order: normalizeTeamOrder(post.acf.ordem),
     active: normalizeBoolean(post.acf.ativo),
+  };
+}
+
+export function mapGuia(
+  post: WordPressPost<GuiaACF>,
+  image: ACFImage | null,
+): GuiaContent {
+  return {
+    id: post.id,
+    date: post.date,
+    modified: post.modified,
+    slug: post.slug,
+    status: post.status,
+    link: post.link,
+    title:
+      normalizeText(post.acf.titulo) ??
+      normalizeText(post.title?.rendered) ??
+      `Guia #${post.id}`,
+    image,
   };
 }
 

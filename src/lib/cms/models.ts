@@ -149,6 +149,12 @@ export interface TeamACF {
   ativo?: ACFValue<boolean>;
 }
 
+/** ACF do CPT `guia` — fonte da seção “Quem caminha conosco”. */
+export interface GuiaACF {
+  titulo?: ACFValue<string>;
+  imagem?: ACFMediaValue<ACFImage> | "";
+}
+
 export interface WordPressPost<TACF> {
   id: number;
   date: string;
@@ -318,6 +324,18 @@ export interface TeamContent {
   links: TeamLink[];
   order: number;
   active: boolean;
+}
+
+/** Conteúdo normalizado do CPT `guia` (estrutura própria, sem BaseACF). */
+export interface GuiaContent {
+  id: number;
+  date: string;
+  modified: string;
+  slug: string;
+  status: string;
+  link: string;
+  title: string;
+  image: ACFImage | null;
 }
 
 export type CollectionStatus = "ok" | "error";

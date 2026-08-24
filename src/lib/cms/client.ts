@@ -9,6 +9,7 @@ import {
   mapOptions,
   mapProject,
   mapPublication,
+  mapGuia,
   mapTeamMember,
   mapVideo,
   mapWork,
@@ -29,6 +30,8 @@ import type {
   EventContent,
   ExhibitionACF,
   ExhibitionContent,
+  GuiaACF,
+  GuiaContent,
   OptionsContent,
   ProjectACF,
   ProjectContent,
@@ -55,6 +58,7 @@ const ENDPOINTS = {
   exhibitions: "exposicao",
   videos: "video",
   team: "equipe",
+  guia: "guia",
 } as const;
 
 const mediaCache = new Map<number, Promise<WordPressMedia>>();
@@ -211,6 +215,18 @@ export async function getTeam(): Promise<TeamContent[]> {
   const posts = await fetchCollection<TeamACF>(ENDPOINTS.team);
   return Promise.all(
     posts.map(async (post) => mapTeamMember(post, await resolveImage(post.acf.imagem))),
+  );
+}
+
+/**
+ * CPT `guia` — seção “Quem caminha conosco”.
+ * Ordem: a mesma de `fetchCollection` (`orderby=date&order=desc`).
+ * Sem campo `ordem` no CMS; não reordenar no client.
+ */
+export async function getGuias(): Promise<GuiaContent[]> {
+  const posts = await fetchCollection<GuiaACF>(ENDPOINTS.guia);
+  return Promise.all(
+    posts.map(async (post) => mapGuia(post, await resolveImage(post.acf.imagem))),
   );
 }
 

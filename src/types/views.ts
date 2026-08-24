@@ -260,3 +260,11 @@ export interface TeamMemberView {
   areas?: string[];
   links?: TeamMemberLink[];
 }
+
+/** View-model da seção “Quem caminha conosco” (CPT `guia`). */
+export interface GuideView {
+  id: number;
+  slug: string;
+  name: string;
+  image?: ImageAsset;
+}
