@@ -438,6 +438,10 @@ export interface EditorialPageACF {
   territory_title?: ACFValue<string>;
   territory_paragraphs?: ACFValue<string | string[]>;
   territory_image?: ACFMediaValue<ACFImage>;
+  territory_paragraphs_2?: ACFValue<string | string[]>;
+  territory_image_2?: ACFMediaValue<ACFImage>;
+  territory_paragraphs_3?: ACFValue<string | string[]>;
+  territory_image_3?: ACFMediaValue<ACFImage>;
   luanda_title?: ACFValue<string>;
   luanda_paragraphs?: ACFValue<string | string[]>;
   luanda_image?: ACFMediaValue<ACFImage>;
@@ -457,6 +461,12 @@ export interface WordPressEditorialPage {
 export interface ComplementarySectionContent {
   title: string;
   items: string[];
+}
+
+/** Prática normalizada a partir de `practices_items` (pares título + descrição). */
+export interface PracticeItemContent {
+  title: string;
+  description: string;
 }
 
 export interface EditorialPageLink {
@@ -479,11 +489,16 @@ export interface EditorialPageContent {
   letterNote: string | null;
   practicesTitle: string | null;
   practicesIntro: string | null;
-  practicesItems: string[];
+  practicesItems: PracticeItemContent[];
   practicesNote: string | null;
   territoryTitle: string | null;
   territoryParagraphs: string[];
   territoryImage: ACFImage | null;
+  territoryParagraphs2: string[];
+  territoryImage2: ACFImage | null;
+  territoryParagraphs3: string[];
+  territoryImage3: ACFImage | null;
+  /** Presente no CMS da Sobre; UI da Luanda pertence a `/equipe/`. */
   luandaTitle: string | null;
   luandaParagraphs: string[];
   luandaImage: ACFImage | null;
@@ -495,5 +510,7 @@ export interface EditorialPageContent {
 export interface ResolvedEditorialMedia {
   sliderImages: ACFImage[];
   territoryImage: ACFImage | null;
+  territoryImage2: ACFImage | null;
+  territoryImage3: ACFImage | null;
   luandaImage: ACFImage | null;
 }

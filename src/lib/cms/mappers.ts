@@ -13,6 +13,7 @@ import type {
   ExhibitionContent,
   NormalizedBaseContent,
   OptionsContent,
+  PracticeItemContent,
   ProjectACF,
   ProjectContent,
   PublicationACF,
@@ -666,6 +667,46 @@ function mapComplementarySections(value: unknown): ComplementarySectionContent[]
   return sections;
 }
 
+/**
+ * `practices_items` chega como HTML (pares <p>título</p><p>descrição</p>)
+ * ou como lista. Normaliza para pares título + descrição — sem renderizar HTML.
+ * JSON/objeto inválido ou ímpar: não inventa conteúdo; último ímpar vira título sem descrição.
+ */
+export function mapPracticeItems(value: unknown): PracticeItemContent[] {
+  if (Array.isArray(value)) {
+    const fromObjects: PracticeItemContent[] = [];
+    let sawStructured = false;
+
+    for (const entry of value) {
+      if (!isRecord(entry)) continue;
+      const title = normalizeEditorialText(
+        entry.title ?? entry.titulo ?? entry.label ?? entry.name,
+      );
+      const description =
+        normalizeEditorialText(
+          entry.description ?? entry.descricao ?? entry.texto ?? entry.item,
+        ) ?? "";
+      if (!title && !description) continue;
+      sawStructured = true;
+      if (title) fromObjects.push({ title, description });
+    }
+
+    if (sawStructured) return fromObjects;
+  }
+
+  const paragraphs = normalizeStringList(value);
+  const items: PracticeItemContent[] = [];
+
+  for (let index = 0; index < paragraphs.length; index += 2) {
+    const title = paragraphs[index];
+    const description = paragraphs[index + 1] ?? "";
+    if (!title) continue;
+    items.push({ title, description });
+  }
+
+  return items;
+}
+
 export function mapOptions(
   payload: WordPressOptions,
   homeVideoFile: ACFFile | null,
@@ -712,11 +753,15 @@ export function mapEditorialPage(
     letterNote: normalizeEditorialText(acf.letter_note),
     practicesTitle: normalizeText(acf.practices_title),
     practicesIntro: normalizeEditorialText(acf.practices_intro),
-    practicesItems: normalizeStringList(acf.practices_items),
+    practicesItems: mapPracticeItems(acf.practices_items),
     practicesNote: normalizeEditorialText(acf.practices_note),
     territoryTitle: normalizeText(acf.territory_title),
     territoryParagraphs: splitEditorialParagraphs(acf.territory_paragraphs),
     territoryImage: media.territoryImage,
+    territoryParagraphs2: splitEditorialParagraphs(acf.territory_paragraphs_2),
+    territoryImage2: media.territoryImage2,
+    territoryParagraphs3: splitEditorialParagraphs(acf.territory_paragraphs_3),
+    territoryImage3: media.territoryImage3,
     luandaTitle: normalizeText(acf.luanda_title),
     luandaParagraphs: splitEditorialParagraphs(acf.luanda_paragraphs),
     luandaImage: media.luandaImage,

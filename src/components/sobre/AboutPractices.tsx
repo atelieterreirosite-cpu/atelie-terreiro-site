@@ -1,8 +1,11 @@
+import { EditorialText } from "@/components/ui/EditorialText";
+import type { AboutPracticeItem } from "@/types/views";
+
 interface AboutPracticesProps {
   id: string;
   title: string;
   intro: string;
-  items: string[];
+  items: AboutPracticeItem[];
   note: string;
 }
 
@@ -13,28 +16,30 @@ export function AboutPractices({ id, title, intro, items, note }: AboutPractices
         <h2 className="font-display text-3xl font-light tracking-wide md:text-4xl">{title}</h2>
       ) : null}
 
-      {intro ? (
-        <p className="whitespace-pre-line text-base leading-relaxed text-foreground/90 md:text-lg">
-          {intro}
-        </p>
-      ) : null}
+      <EditorialText
+        text={intro}
+        className="text-base leading-relaxed text-foreground/90 md:text-lg"
+      />
 
       {items.length > 0 ? (
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {items.map((item) => (
-            <li
-              key={item}
-              className="whitespace-pre-line border-t border-border pt-3 text-sm leading-relaxed text-foreground/85"
-            >
-              {item}
+        <ul className="grid gap-8 sm:grid-cols-2 sm:gap-x-10 sm:gap-y-10">
+          {items.map((item, index) => (
+            <li key={`${item.title}-${index}`} className="space-y-2 border-t border-border pt-4">
+              <h3 className="text-sm tracking-[0.12em] text-foreground uppercase">
+                {item.title}
+              </h3>
+              {item.description ? (
+                <EditorialText
+                  text={item.description}
+                  className="text-sm leading-relaxed text-foreground/85"
+                />
+              ) : null}
             </li>
           ))}
         </ul>
       ) : null}
 
-      {note ? (
-        <p className="whitespace-pre-line text-sm leading-relaxed text-muted">{note}</p>
-      ) : null}
+      <EditorialText text={note} className="text-sm leading-relaxed text-muted" />
     </section>
   );
 }

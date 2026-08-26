@@ -239,13 +239,22 @@ export async function getOptions(): Promise<OptionsContent> {
 export async function getEditorialPage(slug: EditorialPageSlug): Promise<EditorialPageContent> {
   const payload = await fetchWpJson<WordPressEditorialPage>(`atelie/v1/page/${slug}`);
   const acf = payload.acf ?? {};
-  const [sliderImages, territoryImage, luandaImage] = await Promise.all([
-    resolveImageList(acf.slider_imagens),
-    resolveImage(acf.territory_image),
-    resolveImage(acf.luanda_image),
-  ]);
+  const [sliderImages, territoryImage, territoryImage2, territoryImage3, luandaImage] =
+    await Promise.all([
+      resolveImageList(acf.slider_imagens),
+      resolveImage(acf.territory_image),
+      resolveImage(acf.territory_image_2),
+      resolveImage(acf.territory_image_3),
+      resolveImage(acf.luanda_image),
+    ]);
 
-  return mapEditorialPage(payload, { sliderImages, territoryImage, luandaImage });
+  return mapEditorialPage(payload, {
+    sliderImages,
+    territoryImage,
+    territoryImage2,
+    territoryImage3,
+    luandaImage,
+  });
 }
 
 async function safeCollection<TItem>(

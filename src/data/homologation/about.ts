@@ -43,12 +43,10 @@ export const aboutPageContent: AboutPageView = {
     title: "Como atua",
     intro: HOMOLOGATION,
     items: [
-      "Grupos de estudos",
-      "Laboratórios",
-      "Mostras e exposições",
-      "Performances",
-      "Formação e pesquisa",
-      "Intervenções urbanas",
+      { title: "Grupos de estudos", description: HOMOLOGATION },
+      { title: "Laboratórios", description: HOMOLOGATION },
+      { title: "Mostras e exposições", description: HOMOLOGATION },
+      { title: "Performances", description: HOMOLOGATION },
     ],
     note: HOMOLOGATION,
   },
@@ -56,15 +54,20 @@ export const aboutPageContent: AboutPageView = {
   territory: {
     id: "territorio",
     title: "Território",
-    paragraphs: [HOMOLOGATION],
-    image: homologationImage("dsc1505", 1),
-  },
-
-  luanda: {
-    id: "luanda",
-    title: "Luanda",
-    paragraphs: [HOMOLOGATION],
-    image: homologationImage("dsc1515", 2),
+    blocks: [
+      {
+        paragraphs: [HOMOLOGATION],
+        image: homologationImage("dsc1505", 1),
+      },
+      {
+        paragraphs: [HOMOLOGATION],
+        image: homologationImage("dsc1515", 2),
+      },
+      {
+        paragraphs: [HOMOLOGATION],
+        image: homologationImage("dsc1505", 3),
+      },
+    ],
   },
 
   complementary: {

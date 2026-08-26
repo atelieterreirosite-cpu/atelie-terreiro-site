@@ -1,13 +1,19 @@
 import { aboutPageContent } from "@/data/homologation/about";
 import { getEditorialPage } from "@/lib/cms/client";
 import type { EditorialPageContent } from "@/lib/cms/models";
-import type { AboutBlock, AboutPageView } from "@/types/views";
+import type {
+  AboutBlock,
+  AboutPageView,
+  TerritoryBlock,
+  TerritorySectionView,
+} from "@/types/views";
 
 import { mapImageAsset } from "./media";
 
 /**
  * Adapter da página Sobre (`/atelie/v1/page/sobre`).
  * Campos vazios não são preenchidos com mock. Fallback só se o endpoint falhar.
+ * `luanda_*` permanece no CMS bruto, mas não entra no view-model da Sobre.
  */
 
 export type AboutDataSource = "cms" | "homologation";
@@ -31,6 +37,44 @@ function mapBlock(
     title: title ?? "",
     paragraphs,
     ...(image ? { image } : {}),
+  };
+}
+
+function mapTerritoryBlock(
+  paragraphs: string[],
+  image: ReturnType<typeof mapImageAsset>,
+): TerritoryBlock | undefined {
+  if (paragraphs.length === 0 && !image) return undefined;
+
+  return {
+    paragraphs,
+    ...(image ? { image } : {}),
+  };
+}
+
+function mapTerritorySection(page: EditorialPageContent): TerritorySectionView | undefined {
+  const fallbackAlt = page.territoryTitle || page.title;
+  const blocks = [
+    mapTerritoryBlock(
+      page.territoryParagraphs,
+      mapImageAsset(page.territoryImage, fallbackAlt),
+    ),
+    mapTerritoryBlock(
+      page.territoryParagraphs2,
+      mapImageAsset(page.territoryImage2, `${fallbackAlt} 2`),
+    ),
+    mapTerritoryBlock(
+      page.territoryParagraphs3,
+      mapImageAsset(page.territoryImage3, `${fallbackAlt} 3`),
+    ),
+  ].filter((block): block is TerritoryBlock => block !== undefined);
+
+  if (!page.territoryTitle && blocks.length === 0) return undefined;
+
+  return {
+    id: "territorio",
+    title: page.territoryTitle ?? "",
+    blocks,
   };
 }
 
@@ -70,18 +114,7 @@ function mapAboutPage(page: EditorialPageContent): AboutPageView {
         }
       : undefined,
     practices,
-    territory: mapBlock(
-      "territorio",
-      page.territoryTitle,
-      page.territoryParagraphs,
-      mapImageAsset(page.territoryImage, page.territoryTitle || page.title),
-    ),
-    luanda: mapBlock(
-      "luanda",
-      page.luandaTitle,
-      page.luandaParagraphs,
-      mapImageAsset(page.luandaImage, page.luandaTitle || page.title),
-    ),
+    territory: mapTerritorySection(page),
     complementary,
     links: page.pageLinks.map((link) => ({ label: link.label, href: link.url })),
   };

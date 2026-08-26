@@ -216,6 +216,23 @@ export interface AboutComplementarySection {
   items: string[];
 }
 
+export interface AboutPracticeItem {
+  title: string;
+  description: string;
+}
+
+/** Bloco editorial da seção Território / Pequena África. */
+export interface TerritoryBlock {
+  image?: ImageAsset;
+  paragraphs: string[];
+}
+
+export interface TerritorySectionView {
+  id: string;
+  title: string;
+  blocks: TerritoryBlock[];
+}
+
 export interface AboutPageView {
   title: string;
   intro: string;
@@ -226,11 +243,10 @@ export interface AboutPageView {
     id: string;
     title: string;
     intro: string;
-    items: string[];
+    items: AboutPracticeItem[];
     note: string;
   };
-  territory?: AboutBlock;
-  luanda?: AboutBlock;
+  territory?: TerritorySectionView;
   complementary?: {
     title: string;
     sections: AboutComplementarySection[];

@@ -5,6 +5,7 @@ import { AboutLetterBlock } from "./AboutLetterBlock";
 import { AboutLinks, AboutPageNav } from "./AboutPageNav";
 import { AboutPractices } from "./AboutPractices";
 import { AboutSection } from "./AboutSection";
+import { TerritorySection } from "./TerritorySection";
 
 interface AboutPageContentProps {
   content: AboutPageView;
@@ -42,9 +43,15 @@ export function AboutPageContentView({ content }: AboutPageContentProps) {
             note={content.practices.note}
           />
         ) : null}
+      </div>
 
-        {content.territory ? <AboutSection block={content.territory} /> : null}
+      {content.territory ? (
+        <div className="mx-auto max-w-6xl overflow-x-hidden px-6 py-4 sm:py-8 md:px-10 md:py-12">
+          <TerritorySection section={content.territory} />
+        </div>
+      ) : null}
 
+      <div className="mx-auto max-w-5xl space-y-20 px-6 pb-12 sm:space-y-24 sm:pb-16 md:px-10 md:pb-24">
         {content.complementary ? (
           <AboutComplementary
             title={content.complementary.title}
@@ -52,7 +59,11 @@ export function AboutPageContentView({ content }: AboutPageContentProps) {
           />
         ) : null}
 
-        {content.links.length > 0 ? <AboutLinks links={content.links} /> : null}
+        {content.links.length > 0 ? (
+          <div className="mx-auto max-w-3xl">
+            <AboutLinks links={content.links} />
+          </div>
+        ) : null}
       </div>
     </>
   );
