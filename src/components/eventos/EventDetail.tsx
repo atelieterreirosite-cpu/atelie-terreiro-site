@@ -67,16 +67,22 @@ export function EventDetail({ event }: EventDetailProps) {
 
       {event.featuredImage ? (
         <div className="mx-auto mt-12 max-w-4xl px-6 md:px-10">
-          <div className="relative aspect-[16/9] overflow-hidden bg-accent/5">
+          <a
+            href={event.featuredImage.src}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative block aspect-[16/9] overflow-hidden bg-accent/5"
+            aria-label={`Abrir imagem: ${event.featuredImage.alt}`}
+          >
             <Image
               src={event.featuredImage.src}
               alt={event.featuredImage.alt}
               fill
               priority
               sizes="(max-width: 896px) 100vw, 896px"
-              className="object-cover"
+              className="object-cover transition-transform duration-700 motion-reduce:transition-none group-hover:scale-[1.02]"
             />
-          </div>
+          </a>
         </div>
       ) : null}
 
@@ -116,6 +122,17 @@ export function EventDetail({ event }: EventDetailProps) {
             <h2 className="text-xs tracking-[0.15em] text-muted-light uppercase">Participantes</h2>
             <p className="text-sm leading-relaxed text-muted">{event.participants}</p>
           </section>
+        ) : null}
+
+        {event.attachment ? (
+          <a
+            href={event.attachment.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link-underline inline-block text-sm tracking-[0.12em] text-foreground uppercase"
+          >
+            Abrir anexo →
+          </a>
         ) : null}
       </div>
     </article>

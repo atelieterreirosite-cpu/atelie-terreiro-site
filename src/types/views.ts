@@ -157,6 +157,7 @@ export interface EventView {
   excerpt: string;
   descriptionText: string | null;
   featuredImage?: ImageAsset;
+  attachment?: WorkAttachment;
   participants?: string;
   registration?: {
     label: string;

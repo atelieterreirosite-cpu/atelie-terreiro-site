@@ -1,6 +1,6 @@
 import { getEvents } from "@/lib/cms/client";
-import type { EventContent } from "@/lib/cms/models";
-import type { EventModality, EventStatus, EventView } from "@/types/views";
+import type { ACFFile, EventContent } from "@/lib/cms/models";
+import type { EventModality, EventStatus, EventView, WorkAttachment } from "@/types/views";
 
 import { dateSortKey, formatDisplayPeriod, todaySortKey } from "./dates";
 import { mapImageAsset } from "./media";
@@ -26,6 +26,13 @@ interface MappedEvent extends EventView {
 
 function mapImage(item: EventContent) {
   return mapImageAsset(item.content.image, item.content.title);
+}
+
+function mapAttachment(file: ACFFile | null | undefined): WorkAttachment | undefined {
+  if (!file?.url) return undefined;
+
+  const label = file.filename?.trim() || file.title?.trim() || "Abrir anexo";
+  return { url: file.url, label };
 }
 
 function formatLocation(item: EventContent): string | undefined {
@@ -86,6 +93,7 @@ function mapEventToMapped(item: EventContent): MappedEvent {
     excerpt: item.content.summary ?? "",
     descriptionText: item.content.descriptionText,
     featuredImage: mapImage(item),
+    attachment: mapAttachment(item.content.attachment),
     participants: item.details.participants ?? undefined,
     registration: mapRegistration(item, status),
     sortKey,
