@@ -10,6 +10,9 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Publicações",
   description: "Publicações do Ateliê Terreiro.",
+  alternates: {
+    canonical: "/publicacoes/",
+  },
 };
 
 export default async function PublicacoesPage() {

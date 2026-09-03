@@ -11,6 +11,9 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Eventos",
   description: "Programação pública do Ateliê Terreiro.",
+  alternates: {
+    canonical: "/eventos/",
+  },
 };
 
 export default async function EventosPage() {

@@ -10,6 +10,9 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Vídeos",
   description: "Vídeos do Ateliê Terreiro.",
+  alternates: {
+    canonical: "/videos/",
+  },
 };
 
 export default async function VideosPage() {

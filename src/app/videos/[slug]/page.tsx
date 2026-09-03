@@ -30,6 +30,9 @@ export async function generateMetadata({ params }: VideoPageProps): Promise<Meta
   return {
     title: video.title,
     description: video.excerpt || undefined,
+    alternates: {
+      canonical: `/videos/${slug}/`,
+    },
   };
 }
 

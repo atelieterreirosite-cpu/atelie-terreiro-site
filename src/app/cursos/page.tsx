@@ -11,6 +11,9 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Cursos",
   description: "Formação e atividades educacionais do Ateliê Terreiro.",
+  alternates: {
+    canonical: "/cursos/",
+  },
 };
 
 export default async function CursosPage() {

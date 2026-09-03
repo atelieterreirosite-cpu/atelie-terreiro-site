@@ -10,6 +10,9 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Contato",
   description: "Canais e localização do Ateliê Terreiro.",
+  alternates: {
+    canonical: "/contato/",
+  },
 };
 
 export default async function ContatoPage() {

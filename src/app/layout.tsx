@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { SITE_ORIGIN } from "@/lib/seo/site";
+
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -19,6 +21,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_ORIGIN),
   title: {
     default: "Ateliê Terreiro",
     template: "%s | Ateliê Terreiro",

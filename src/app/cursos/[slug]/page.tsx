@@ -27,6 +27,9 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
   return {
     title: course.title,
     description: course.excerpt || undefined,
+    alternates: {
+      canonical: `/cursos/${slug}/`,
+    },
   };
 }
 

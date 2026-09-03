@@ -10,6 +10,9 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Sobre",
   description: "Identidade, origem e práticas do Ateliê Terreiro.",
+  alternates: {
+    canonical: "/sobre/",
+  },
 };
 
 export default async function SobrePage() {

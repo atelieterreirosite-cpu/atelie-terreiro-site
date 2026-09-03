@@ -27,6 +27,9 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
   return {
     title: event.title,
     description: event.excerpt || undefined,
+    alternates: {
+      canonical: `/eventos/${slug}/`,
+    },
   };
 }
 

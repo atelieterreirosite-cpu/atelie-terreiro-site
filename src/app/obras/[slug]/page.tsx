@@ -27,6 +27,9 @@ export async function generateMetadata({ params }: WorkPageProps): Promise<Metad
   return {
     title: work.title,
     description: work.excerpt || undefined,
+    alternates: {
+      canonical: `/obras/${slug}/`,
+    },
   };
 }
 

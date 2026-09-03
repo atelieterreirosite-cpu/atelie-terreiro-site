@@ -30,6 +30,9 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
   return {
     title: project.title,
     description: project.excerpt || undefined,
+    alternates: {
+      canonical: `/arquivo/${slug}/`,
+    },
   };
 }
 

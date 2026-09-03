@@ -24,6 +24,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: PORTFOLIO_TITLE,
     description: portfolioDescription(page.intro),
+    alternates: {
+      canonical: "/arquivo/",
+    },
   };
 }
 

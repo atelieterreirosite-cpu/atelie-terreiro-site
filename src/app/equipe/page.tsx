@@ -13,6 +13,9 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Equipe",
   description: "Pessoas que fazem o Ateliê Terreiro acontecer, pensar e construir.",
+  alternates: {
+    canonical: "/equipe/",
+  },
 };
 
 export default async function EquipePage() {

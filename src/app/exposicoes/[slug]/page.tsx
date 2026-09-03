@@ -32,6 +32,9 @@ export async function generateMetadata({
   return {
     title: exhibition.title,
     description: exhibition.excerpt || undefined,
+    alternates: {
+      canonical: `/exposicoes/${slug}/`,
+    },
   };
 }
 

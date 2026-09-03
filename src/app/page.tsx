@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
+
 import { HomeHero } from "@/components/home/HomeHero";
 import { Header } from "@/components/layout/Header";
 import { loadHomeVideoForView, loadSiteInfoForView } from "@/lib/adapters/site";
 
 export const dynamic = "force-static";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+};
 
 /**
  * Home visual: vídeo fullscreen + Header overlay.
