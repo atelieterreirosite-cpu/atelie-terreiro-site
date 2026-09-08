@@ -16,34 +16,52 @@ const modalityLabels: Record<EventModality, string> = {
 };
 
 export function EventCard({ event }: EventCardProps) {
+  const hasImage = Boolean(event.featuredImage);
+
   return (
     <article className="group border-t border-border pt-8 first:border-t-0 first:pt-0">
       <Link
         href={`/eventos/${event.slug}/`}
-        className="grid gap-5 sm:gap-6 md:grid-cols-[minmax(0,140px)_1fr] md:gap-10"
+        className={
+          hasImage
+            ? "grid gap-5 sm:gap-6 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:items-start md:gap-10"
+            : "grid gap-5 sm:gap-6"
+        }
       >
-        <div className="space-y-2 sm:space-y-3">
+        {/* Meta só no mobile — no desktop vai para a coluna de texto */}
+        <div className="space-y-2 sm:space-y-3 md:hidden">
           <EventStatusBadge status={event.status} />
           {event.date ? (
-            <p className="font-display text-xl leading-tight font-light tracking-wide sm:text-2xl md:text-3xl">
+            <p className="font-display text-xl leading-tight font-light tracking-wide sm:text-2xl">
               {event.date}
             </p>
           ) : null}
           {event.time ? <p className="text-sm text-muted">{event.time}</p> : null}
         </div>
 
-        <div className="space-y-4">
-          {event.featuredImage ? (
-            <div className="relative aspect-[16/9] overflow-hidden bg-accent/5 md:hidden">
-              <Image
-                src={event.featuredImage.src}
-                alt={event.featuredImage.alt}
-                fill
-                sizes="100vw"
-                className="object-cover transition-transform duration-700 motion-reduce:transition-none max-md:group-active:scale-[1.01] md:group-hover:scale-[1.02]"
-              />
-            </div>
-          ) : null}
+        {event.featuredImage ? (
+          <div className="flex max-h-[min(45vh,320px)] max-w-full items-center justify-center md:max-h-[260px] md:self-start">
+            <Image
+              src={event.featuredImage.src}
+              alt={event.featuredImage.alt}
+              width={event.featuredImage.width ?? 1600}
+              height={event.featuredImage.height ?? 1200}
+              sizes="(max-width: 768px) 100vw, 280px"
+              className="h-auto max-h-[min(45vh,320px)] w-auto max-w-full object-contain transition-opacity duration-500 motion-reduce:transition-none group-hover:opacity-90 md:max-h-[260px]"
+            />
+          </div>
+        ) : null}
+
+        <div className="space-y-4 md:min-w-0">
+          <div className="hidden flex-wrap items-baseline gap-x-4 gap-y-2 md:flex">
+            <EventStatusBadge status={event.status} />
+            {event.date ? (
+              <p className="font-display text-2xl leading-none font-light tracking-wide lg:text-3xl">
+                {event.date}
+              </p>
+            ) : null}
+            {event.time ? <p className="text-sm text-muted">{event.time}</p> : null}
+          </div>
 
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             {event.type ? (

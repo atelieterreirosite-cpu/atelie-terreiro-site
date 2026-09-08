@@ -71,7 +71,7 @@ export function EventDetail({ event }: EventDetailProps) {
             href={event.featuredImage.src}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex max-h-[min(70vh,720px)] max-w-full items-center justify-center bg-accent/5"
+            className="group inline-flex max-h-[min(70vh,720px)] max-w-full items-center justify-center"
             aria-label={`Abrir imagem: ${event.featuredImage.alt}`}
           >
             <Image
