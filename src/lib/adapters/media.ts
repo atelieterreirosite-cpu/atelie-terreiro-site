@@ -10,6 +10,8 @@ export function mapImageAsset(
   return {
     src: image.url,
     alt: image.alt?.trim() || image.title?.trim() || fallbackAlt,
+    ...(typeof image.width === "number" && image.width > 0 ? { width: image.width } : {}),
+    ...(typeof image.height === "number" && image.height > 0 ? { height: image.height } : {}),
   };
 }
 

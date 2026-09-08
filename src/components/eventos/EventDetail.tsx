@@ -66,21 +66,22 @@ export function EventDetail({ event }: EventDetailProps) {
       </div>
 
       {event.featuredImage ? (
-        <div className="mx-auto mt-12 max-w-4xl px-6 md:px-10">
+        <div className="mx-auto mt-12 flex max-w-4xl justify-center px-6 md:px-10">
           <a
             href={event.featuredImage.src}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative block aspect-[16/9] overflow-hidden bg-accent/5"
+            className="group inline-flex max-h-[min(70vh,720px)] max-w-full items-center justify-center bg-accent/5"
             aria-label={`Abrir imagem: ${event.featuredImage.alt}`}
           >
             <Image
               src={event.featuredImage.src}
               alt={event.featuredImage.alt}
-              fill
+              width={event.featuredImage.width ?? 1600}
+              height={event.featuredImage.height ?? 1200}
               priority
               sizes="(max-width: 896px) 100vw, 896px"
-              className="object-cover transition-transform duration-700 motion-reduce:transition-none group-hover:scale-[1.02]"
+              className="h-auto max-h-[min(70vh,720px)] w-auto max-w-full object-contain transition-opacity duration-500 motion-reduce:transition-none group-hover:opacity-90"
             />
           </a>
         </div>
