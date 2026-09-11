@@ -1,15 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { DM_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import type { ReactNode } from "react";
 
 import { SITE_ORIGIN } from "@/lib/seo/site";
 
 import "./globals.css";
 
-const cormorant = Cormorant_Garamond({
-  variable: "--font-cormorant",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+const mcCapitals = localFont({
+  src: "../../public/fonts/MCapitals.ttf",
+  variable: "--font-mcapitals",
   display: "swap",
 });
 
@@ -40,7 +40,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html
       lang="pt-BR"
-      className={`${cormorant.variable} ${dmSans.variable} h-full antialiased`}
+      className={`${mcCapitals.variable} ${dmSans.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">{children}</body>
     </html>

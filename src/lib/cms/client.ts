@@ -107,12 +107,21 @@ function fetchMedia(id: number): Promise<WordPressMedia> {
 async function resolveImage(value: unknown): Promise<ACFImage | null> {
   const direct = normalizeImage(value);
   if (direct) return direct;
-  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) return null;
+
+  let mediaId: number | null = null;
+  if (typeof value === "number" && Number.isInteger(value) && value > 0) {
+    mediaId = value;
+  } else if (typeof value === "string" && /^\d+$/.test(value.trim())) {
+    const parsed = Number(value.trim());
+    mediaId = parsed > 0 ? parsed : null;
+  }
+
+  if (mediaId === null) return null;
 
   try {
-    return imageFromWordPressMedia(await fetchMedia(value));
+    return imageFromWordPressMedia(await fetchMedia(mediaId));
   } catch (error) {
-    console.error(`[CMS] Falha ao resolver imagem #${value}:`, error);
+    console.error(`[CMS] Falha ao resolver imagem #${mediaId}:`, error);
     return null;
   }
 }
@@ -137,38 +146,134 @@ async function resolveImageList(value: unknown): Promise<ACFImage[]> {
   return images.filter((image): image is ACFImage => image !== null);
 }
 
-async function resolveBaseMedia(acf: { imagem?: unknown; anexo?: unknown }): Promise<ResolvedPostMedia> {
+function hasGalleryMedia(value: unknown): boolean {
+  if (value === false || value === null || value === undefined || value === "") return false;
+  if (typeof value === "number") return Number.isInteger(value) && value > 0;
+  if (typeof value === "string") return /^\d+$/.test(value.trim()) && Number(value.trim()) > 0;
+  if (typeof value === "object") return true;
+  return false;
+}
+
+/**
+ * Prioriza `galeria_imagem_1…5` (contrato ACF atual).
+ * Quando `atelie_gallery` (legado de `projeto`) já traz objetos com URL,
+ * reutiliza esses objetos na ordem dos slots — evita roundtrip em `/media`
+ * (alguns anexos retornam 401).
+ * A capa (`imagem`) nunca entra nesta lista.
+ */
+function collectGallerySources(post: {
+  atelie_gallery?: unknown;
+  acf: {
+    atelie_gallery?: unknown;
+    galeria_imagem_1?: unknown;
+    galeria_imagem_2?: unknown;
+    galeria_imagem_3?: unknown;
+    galeria_imagem_4?: unknown;
+    galeria_imagem_5?: unknown;
+  };
+}): unknown[] {
+  const slots = [
+    post.acf.galeria_imagem_1,
+    post.acf.galeria_imagem_2,
+    post.acf.galeria_imagem_3,
+    post.acf.galeria_imagem_4,
+    post.acf.galeria_imagem_5,
+  ].filter(hasGalleryMedia);
+
+  const legacyRaw = post.atelie_gallery ?? post.acf.atelie_gallery;
+  const legacy = Array.isArray(legacyRaw) ? legacyRaw.filter(hasGalleryMedia) : [];
+
+  if (slots.length > 0) {
+    if (legacy.length === 0) return slots;
+
+    return slots.map((slot) => {
+      const slotId =
+        typeof slot === "number" || typeof slot === "string"
+          ? Number(slot)
+          : typeof slot === "object" && slot !== null
+            ? Number(
+                (slot as { id?: unknown; ID?: unknown }).id ??
+                  (slot as { id?: unknown; ID?: unknown }).ID,
+              )
+            : NaN;
+
+      if (!Number.isFinite(slotId) || slotId <= 0) return slot;
+
+      const match = legacy.find((entry) => {
+        if (typeof entry === "number") return entry === slotId;
+        if (typeof entry === "string") return Number(entry) === slotId;
+        if (typeof entry === "object" && entry !== null) {
+          const id = Number(
+            (entry as { id?: unknown; ID?: unknown }).id ??
+              (entry as { id?: unknown; ID?: unknown }).ID,
+          );
+          return id === slotId;
+        }
+        return false;
+      });
+
+      return match ?? slot;
+    });
+  }
+
+  return legacy.slice(0, 5);
+}
+
+async function resolveBaseMedia(acf: {
+  imagem?: unknown;
+  anexo?: unknown;
+}): Promise<ResolvedPostMedia> {
   const [image, attachment] = await Promise.all([
     resolveImage(acf.imagem),
     resolveFile(acf.anexo),
   ]);
 
-  return { image, attachment };
+  return { image, attachment, gallery: [] };
+}
+
+async function resolveContentMedia(post: {
+  atelie_gallery?: unknown;
+  acf: {
+    imagem?: unknown;
+    anexo?: unknown;
+    atelie_gallery?: unknown;
+    galeria_imagem_1?: unknown;
+    galeria_imagem_2?: unknown;
+    galeria_imagem_3?: unknown;
+    galeria_imagem_4?: unknown;
+    galeria_imagem_5?: unknown;
+  };
+}): Promise<ResolvedPostMedia> {
+  const [image, attachment, gallery] = await Promise.all([
+    resolveImage(post.acf.imagem),
+    resolveFile(post.acf.anexo),
+    resolveImageList(collectGallerySources(post)),
+  ]);
+
+  return { image, attachment, gallery };
 }
 
 export async function getProjects(): Promise<ProjectContent[]> {
   const posts = await fetchCollection<ProjectACF>(ENDPOINTS.projects);
   return Promise.all(
     posts.map(async (post) => {
-      const gallerySource = post.atelie_gallery ?? post.acf.atelie_gallery;
-      const [media, videoFile, gallery] = await Promise.all([
-        resolveBaseMedia(post.acf),
+      const [media, videoFile] = await Promise.all([
+        resolveContentMedia(post),
         resolveFile(post.acf.arquivo_video),
-        resolveImageList(gallerySource),
       ]);
-      return mapProject(post, { ...media, videoFile, gallery });
+      return mapProject(post, { ...media, videoFile });
     }),
   );
 }
 
 export async function getEvents(): Promise<EventContent[]> {
   const posts = await fetchCollection<EventACF>(ENDPOINTS.events);
-  return Promise.all(posts.map(async (post) => mapEvent(post, await resolveBaseMedia(post.acf))));
+  return Promise.all(posts.map(async (post) => mapEvent(post, await resolveContentMedia(post))));
 }
 
 export async function getCourses(): Promise<CourseContent[]> {
   const posts = await fetchCollection<CourseACF>(ENDPOINTS.courses);
-  return Promise.all(posts.map(async (post) => mapCourse(post, await resolveBaseMedia(post.acf))));
+  return Promise.all(posts.map(async (post) => mapCourse(post, await resolveContentMedia(post))));
 }
 
 export async function getWorks(): Promise<WorkContent[]> {
@@ -176,7 +281,7 @@ export async function getWorks(): Promise<WorkContent[]> {
   return Promise.all(
     posts.map(async (post) => {
       const [media, videoFile] = await Promise.all([
-        resolveBaseMedia(post.acf),
+        resolveContentMedia(post),
         resolveFile(post.acf.arquivo_video),
       ]);
       return mapWork(post, media, videoFile);
@@ -187,14 +292,14 @@ export async function getWorks(): Promise<WorkContent[]> {
 export async function getPublications(): Promise<PublicationContent[]> {
   const posts = await fetchCollection<PublicationACF>(ENDPOINTS.publications);
   return Promise.all(
-    posts.map(async (post) => mapPublication(post, await resolveBaseMedia(post.acf))),
+    posts.map(async (post) => mapPublication(post, await resolveContentMedia(post))),
   );
 }
 
 export async function getExhibitions(): Promise<ExhibitionContent[]> {
   const posts = await fetchCollection<ExhibitionACF>(ENDPOINTS.exhibitions);
   return Promise.all(
-    posts.map(async (post) => mapExhibition(post, await resolveBaseMedia(post.acf))),
+    posts.map(async (post) => mapExhibition(post, await resolveContentMedia(post))),
   );
 }
 

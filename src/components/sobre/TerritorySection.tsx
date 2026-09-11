@@ -62,7 +62,7 @@ export function TerritorySection({ section }: TerritorySectionProps) {
   return (
     <section id={section.id} className="scroll-mt-28 space-y-14 sm:space-y-20 md:space-y-24">
       {section.title ? (
-        <h2 className="mx-auto max-w-3xl font-display text-2xl font-light tracking-wide sm:text-3xl md:text-4xl">
+        <h2 className="mx-auto max-w-3xl font-display text-xl font-light tracking-wide sm:text-2xl md:text-3xl">
           {section.title}
         </h2>
       ) : null}

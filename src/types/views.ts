@@ -49,7 +49,7 @@ export interface ProjectView {
   excerpt: string;
   descriptionText: string | null;
   featuredImage?: ImageAsset;
-  /** Galeria principal: `atelie_gallery`; fallback visual usa `featuredImage`. */
+  /** Imagens adicionais (`galeria_imagem_1…5`); independentes da capa (`imagem`). */
   gallery: ImageAsset[];
   video?: ContentVideo;
   participants?: string;
@@ -81,6 +81,8 @@ export interface WorkView {
   descriptionText: string | null;
   credits?: string;
   featuredImage?: ImageAsset;
+  /** Imagens adicionais (`galeria_imagem_1…5`); independentes da capa. */
+  gallery: ImageAsset[];
   video?: ContentVideo;
   attachment?: WorkAttachment;
   /** ACF `link_externo` — CTA só quando houver URL válida. */
@@ -103,6 +105,8 @@ export interface ExhibitionView {
   excerpt: string;
   descriptionText: string | null;
   featuredImage?: ImageAsset;
+  /** Imagens adicionais (`galeria_imagem_1…5`); independentes da capa. */
+  gallery: ImageAsset[];
   attachment?: WorkAttachment;
   /** ACF `link_externo` — CTA só quando houver URL válida. */
   externalLink?: string;
@@ -119,6 +123,8 @@ export interface PublicationView {
   descriptionText: string | null;
   credits?: string;
   featuredImage?: ImageAsset;
+  /** Imagens adicionais (`galeria_imagem_1…5`); independentes da capa. */
+  gallery: ImageAsset[];
   attachment?: WorkAttachment;
   /** ACF `link_externo` — CTA só quando houver URL válida. */
   externalLink?: string;
@@ -159,6 +165,8 @@ export interface EventView {
   excerpt: string;
   descriptionText: string | null;
   featuredImage?: ImageAsset;
+  /** Imagens adicionais (`galeria_imagem_1…5`); independentes da capa. */
+  gallery: ImageAsset[];
   attachment?: WorkAttachment;
   participants?: string;
   registration?: {
@@ -189,6 +197,8 @@ export interface CourseView {
   excerpt: string;
   descriptionText: string | null;
   featuredImage?: ImageAsset;
+  /** Imagens adicionais (`galeria_imagem_1…5`); independentes da capa. */
+  gallery: ImageAsset[];
   registration?: {
     label: string;
     href?: string;
@@ -216,7 +226,7 @@ export interface AboutLetter {
 
 export interface AboutComplementarySection {
   title: string;
-  items: string[];
+  description: string;
 }
 
 export interface AboutPracticeItem {
@@ -285,5 +295,6 @@ export interface GuideView {
   id: number;
   slug: string;
   name: string;
+  description?: string;
   image?: ImageAsset;
 }

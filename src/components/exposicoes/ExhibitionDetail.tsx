@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { EditorialText } from "@/components/ui/EditorialText";
+import { ContentGallery } from "@/components/ui/ContentGallery";
 import { MediaPlaceholder } from "@/components/ui/MediaPlaceholder";
 import type { ExhibitionView } from "@/types/views";
 
@@ -48,7 +49,7 @@ export function ExhibitionDetail({ exhibition }: ExhibitionDetailProps) {
           </div>
         ) : null}
 
-        <h1 className="font-display mt-4 text-3xl leading-tight font-light tracking-wide text-balance sm:text-4xl md:text-5xl">
+        <h1 className="font-display mt-4 text-xl leading-tight font-light tracking-wide text-balance sm:text-2xl md:text-3xl">
           {exhibition.title}
         </h1>
       </header>
@@ -122,6 +123,15 @@ export function ExhibitionDetail({ exhibition }: ExhibitionDetailProps) {
           </a>
         ) : null}
       </div>
+
+      {exhibition.gallery.length > 0 ? (
+        <div className="mx-auto mt-16 max-w-4xl px-6 md:mt-20 md:px-10">
+          <ContentGallery
+            images={exhibition.gallery}
+            label={`Galeria — ${exhibition.title}`}
+          />
+        </div>
+      ) : null}
     </article>
   );
 }

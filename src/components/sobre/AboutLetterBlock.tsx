@@ -7,7 +7,7 @@ interface AboutLetterBlockProps {
 export function AboutLetterBlock({ letter }: AboutLetterBlockProps) {
   return (
     <figure className="border-l border-accent/30 py-2 pl-6 md:pl-10">
-      <blockquote className="font-display whitespace-pre-line text-xl leading-relaxed font-light tracking-wide text-foreground/95 md:text-2xl md:leading-relaxed">
+      <blockquote className="font-display whitespace-pre-line text-lg leading-relaxed font-light tracking-wide text-foreground/95 md:text-xl md:leading-relaxed">
         {letter.quote}
       </blockquote>
       <figcaption className="mt-6 space-y-2">

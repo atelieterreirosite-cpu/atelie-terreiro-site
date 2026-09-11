@@ -24,7 +24,7 @@ export function AboutPageContentView({ content }: AboutPageContentProps) {
     <>
       {navItems.length > 0 ? <AboutPageNav items={navItems} /> : null}
 
-      <div className="mx-auto max-w-3xl space-y-20 px-6 py-12 sm:space-y-24 sm:py-16 md:px-10 md:py-24">
+      <div className="mx-auto max-w-5xl space-y-20 px-6 py-12 sm:space-y-24 sm:py-16 md:px-8 md:py-24 lg:px-10">
         {content.identity ? <AboutSection block={content.identity} /> : null}
 
         {content.origin || content.letter ? (

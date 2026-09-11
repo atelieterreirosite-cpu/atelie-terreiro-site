@@ -3,7 +3,7 @@ import type { CourseContent } from "@/lib/cms/models";
 import type { CourseModality, CourseStatus, CourseView } from "@/types/views";
 
 import { dateSortKey, formatDisplayPeriod, todaySortKey } from "./dates";
-import { mapImageAsset } from "./media";
+import { mapImageAsset, mapImageAssets } from "./media";
 
 /**
  * Adapter CMS (`CourseContent`) → view-model da UI.
@@ -85,6 +85,7 @@ function mapCourseToMapped(item: CourseContent): MappedCourse {
     excerpt: item.content.summary ?? "",
     descriptionText: item.content.descriptionText,
     featuredImage: mapImage(item),
+    gallery: mapImageAssets(item.details.gallery, item.content.title),
     registration: mapRegistration(item, status),
     sortKey,
   };

@@ -107,7 +107,6 @@ export function YouTubeBackgroundPlayer({
   const containerId = `yt-bg-${reactId}`;
   const playerRef = useRef<YtPlayer | null>(null);
 
-  const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -157,15 +156,19 @@ export function YouTubeBackgroundPlayer({
             event.target.mute();
             event.target.playVideo();
             setIsMuted(true);
-            setIsPlaying(true);
             setReady(true);
           },
           onStateChange: (event) => {
             if (cancelled || !window.YT) return;
 
             const { PlayerState } = window.YT;
-            if (event.data === PlayerState.ENDED) {
+            // Mantém loop e evita UI nativa de pausa (título/canal/controles).
+            if (
+              event.data === PlayerState.ENDED ||
+              event.data === PlayerState.PAUSED
+            ) {
               event.target.playVideo();
+              return;
             }
             if (event.data === PlayerState.PLAYING) {
               try {
@@ -174,10 +177,6 @@ export function YouTubeBackgroundPlayer({
               } catch {
                 // ignore
               }
-              setIsPlaying(true);
-            }
-            if (event.data === PlayerState.PAUSED) {
-              setIsPlaying(false);
             }
           },
           onError: () => {
@@ -213,19 +212,6 @@ export function YouTubeBackgroundPlayer({
     [isMuted, ready],
   );
 
-  const handleSurfaceClick = useCallback(() => {
-    const player = playerRef.current;
-    if (!player || !ready) return;
-
-    if (isPlaying) {
-      player.pauseVideo();
-      setIsPlaying(false);
-    } else {
-      player.playVideo();
-      setIsPlaying(true);
-    }
-  }, [isPlaying, ready]);
-
   if (!video.videoId || failed) {
     return (
       <div
@@ -239,25 +225,28 @@ export function YouTubeBackgroundPlayer({
   return (
     <div className={`absolute inset-0 overflow-hidden bg-black ${className}`}>
       <div
-        className={`pointer-events-none ${coverClass(fit)} [&_iframe]:absolute [&_iframe]:inset-0 [&_iframe]:h-full [&_iframe]:w-full [&_iframe]:border-0`}
+        className={`pointer-events-none ${coverClass(fit)} [&_iframe]:pointer-events-none [&_iframe]:absolute [&_iframe]:inset-0 [&_iframe]:h-full [&_iframe]:w-full [&_iframe]:border-0`}
+        aria-hidden="true"
       >
         <div id={containerId} className="h-full w-full" />
       </div>
 
-      <button
-        type="button"
-        className="absolute inset-0 z-10 cursor-default border-0 bg-transparent"
-        aria-label={isPlaying ? "Pausar vídeo" : "Reproduzir vídeo"}
-        onClick={handleSurfaceClick}
-      />
+      {/* Bloqueia hover/clique no iframe para não disparar UI nativa do YouTube. */}
+      <div className="absolute inset-0 z-10" aria-hidden="true" />
 
       <button
         type="button"
         onClick={toggleMute}
-        className="touch-target fixed right-5 z-40 flex items-center justify-center text-white/85 transition-opacity duration-300 hover:text-white sm:right-8"
-        style={{
-          bottom: "max(1.25rem, env(safe-area-inset-bottom))",
-        }}
+        className={`touch-target z-40 flex items-center justify-center text-white/85 transition-opacity duration-300 hover:text-white ${
+          fit === "width"
+            ? "absolute right-5 sm:right-8"
+            : "fixed right-5 sm:right-8"
+        }`}
+        style={
+          fit === "width"
+            ? { top: "calc(56.25vw - 3.25rem)" }
+            : { bottom: "max(1.25rem, env(safe-area-inset-bottom))" }
+        }
         aria-label={isMuted ? "Ativar som" : "Silenciar"}
       >
         {isMuted ? (

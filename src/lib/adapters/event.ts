@@ -3,7 +3,7 @@ import type { ACFFile, EventContent } from "@/lib/cms/models";
 import type { EventModality, EventStatus, EventView, WorkAttachment } from "@/types/views";
 
 import { dateSortKey, formatDisplayPeriod, todaySortKey } from "./dates";
-import { mapImageAsset } from "./media";
+import { mapImageAsset, mapImageAssets } from "./media";
 
 /**
  * Adapter CMS (`EventContent`) → view-model da UI.
@@ -93,6 +93,7 @@ function mapEventToMapped(item: EventContent): MappedEvent {
     excerpt: item.content.summary ?? "",
     descriptionText: item.content.descriptionText,
     featuredImage: mapImage(item),
+    gallery: mapImageAssets(item.details.gallery, item.content.title),
     attachment: mapAttachment(item.content.attachment),
     participants: item.details.participants ?? undefined,
     registration: mapRegistration(item, status),

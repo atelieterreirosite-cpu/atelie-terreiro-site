@@ -50,7 +50,7 @@ export function VideoDetail({ video }: VideoDetailProps) {
           </div>
         ) : null}
 
-        <h1 className="font-display mt-4 text-3xl leading-tight font-light tracking-wide text-balance sm:text-4xl md:text-5xl lg:text-6xl">
+        <h1 className="font-display mt-4 text-xl leading-tight font-light tracking-wide text-balance sm:text-2xl md:text-3xl lg:text-4xl">
           {video.title}
         </h1>
       </header>

@@ -3,7 +3,7 @@ import type { ACFFile, CMSCollection, ExhibitionContent } from "@/lib/cms/models
 import type { ExhibitionView, WorkAttachment } from "@/types/views";
 
 import { formatDisplayDate, formatDisplayPeriod } from "./dates";
-import { mapImageAsset } from "./media";
+import { mapImageAsset, mapImageAssets } from "./media";
 
 /**
  * Adapter CMS (`ExhibitionContent`) → view-model da UI.
@@ -37,6 +37,7 @@ export function mapExhibitionToView(item: ExhibitionContent): ExhibitionView {
     excerpt: item.content.summary ?? "",
     descriptionText: item.content.descriptionText,
     featuredImage: mapImageAsset(item.content.image, item.content.title),
+    gallery: mapImageAssets(item.details.gallery, item.content.title),
     attachment: mapAttachment(item.content.attachment),
     externalLink: item.content.externalLink ?? undefined,
   };

@@ -16,6 +16,7 @@ export function mapGuiaToView(item: GuiaContent): GuideView {
     id: item.id,
     slug: item.slug,
     name: item.title,
+    description: item.description ?? undefined,
     image: mapImageAsset(item.image, item.title),
   };
 }

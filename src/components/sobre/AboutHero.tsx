@@ -26,7 +26,7 @@ export function AboutHero({ title, intro }: AboutHeroProps) {
           </figure>
 
           <div className="min-w-0 flex-1">
-            <h1 className="font-display text-3xl leading-tight font-light tracking-wide text-balance sm:text-4xl md:text-5xl lg:text-6xl">
+            <h1 className="font-display text-xl leading-tight font-light tracking-wide text-balance sm:text-2xl md:text-3xl lg:text-4xl">
               {title}
             </h1>
             {intro ? (

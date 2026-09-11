@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { EditorialText } from "@/components/ui/EditorialText";
+import { ContentGallery } from "@/components/ui/ContentGallery";
 import { MediaPlaceholder } from "@/components/ui/MediaPlaceholder";
 import { VideoEmbed } from "@/components/ui/VideoEmbed";
 import type { ContentVideo, WorkView } from "@/types/views";
@@ -47,7 +48,7 @@ export function WorkDetail({ work }: WorkDetailProps) {
           </div>
         ) : null}
 
-        <h1 className="font-display mt-4 text-3xl leading-tight font-light tracking-wide text-balance sm:text-4xl md:text-5xl lg:text-6xl">
+        <h1 className="font-display mt-4 text-xl leading-tight font-light tracking-wide text-balance sm:text-2xl md:text-3xl lg:text-4xl">
           {work.title}
         </h1>
       </header>
@@ -109,28 +110,38 @@ export function WorkDetail({ work }: WorkDetailProps) {
           </section>
         ) : null}
 
-        {work.attachment ? (
-          <a
-            href={work.attachment.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-underline inline-block text-sm tracking-[0.12em] text-foreground uppercase"
-          >
-            Abrir anexo →
-          </a>
-        ) : null}
+        {work.attachment || work.externalLink ? (
+          <div className="flex flex-col items-start gap-4">
+            {work.attachment ? (
+              <a
+                href={work.attachment.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link-underline inline-block text-sm tracking-[0.12em] text-foreground uppercase"
+              >
+                Abrir anexo →
+              </a>
+            ) : null}
 
-        {work.externalLink ? (
-          <a
-            href={work.externalLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-underline inline-block text-sm tracking-[0.12em] text-foreground uppercase"
-          >
-            Link externo →
-          </a>
+            {work.externalLink ? (
+              <a
+                href={work.externalLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link-underline inline-block text-sm tracking-[0.12em] text-foreground uppercase"
+              >
+                Link externo →
+              </a>
+            ) : null}
+          </div>
         ) : null}
       </div>
+
+      {work.gallery.length > 0 ? (
+        <div className="mx-auto mt-16 max-w-7xl px-6 md:mt-20 md:px-10">
+          <ContentGallery images={work.gallery} label={`Galeria — ${work.title}`} />
+        </div>
+      ) : null}
     </article>
   );
 }

@@ -34,7 +34,7 @@
   --color-accent: var(--accent);
   --color-overlay: var(--overlay);
   --font-sans: var(--font-dm-sans);
-  --font-display: var(--font-cormorant);
+  --font-display: var(--font-mcapitals);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -86,7 +86,7 @@
 
 @layer utilities {
   .font-display {
-    font-family: var(--font-cormorant), "Times New Roman", serif;
+    font-family: var(--font-mcapitals), "Times New Roman", serif;
   }
 
   .text-balance {
@@ -176,18 +176,18 @@
 
   .prose-editorial h2,
   .prose-editorial h3 {
-    font-family: var(--font-cormorant), "Times New Roman", serif;
+    font-family: var(--font-mcapitals), "Times New Roman", serif;
     font-weight: 400;
     letter-spacing: 0.02em;
     margin: 1.5em 0 0.6em;
   }
 
   .prose-editorial h2 {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
   }
 
   .prose-editorial h3 {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
   }
 }
 

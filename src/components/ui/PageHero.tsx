@@ -13,7 +13,7 @@ export function PageHero({ title, kicker, intro, className = "" }: PageHeroProps
       {kicker ? (
         <p className="mb-4 text-xs tracking-[0.15em] text-muted-light uppercase">{kicker}</p>
       ) : null}
-      <h1 className="font-display text-3xl leading-tight font-light tracking-wide text-balance sm:text-4xl md:text-5xl lg:text-6xl">
+      <h1 className="font-display text-xl leading-tight font-light tracking-wide text-balance sm:text-2xl md:text-3xl lg:text-4xl">
         {title}
       </h1>
       {intro ? (

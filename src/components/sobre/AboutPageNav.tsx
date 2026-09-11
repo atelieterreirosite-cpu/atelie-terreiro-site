@@ -50,7 +50,7 @@ export function AboutLinks({ links }: AboutLinksProps) {
           <li key={link.href}>
             <Link
               href={link.href}
-              className="link-underline font-display text-xl font-light tracking-wide text-foreground/85 transition-colors duration-300 hover:text-foreground md:text-2xl"
+              className="link-underline font-display text-sm font-light tracking-wide text-foreground/85 transition-colors duration-300 hover:text-foreground md:text-base"
             >
               {publicLinkLabel(link)}
             </Link>

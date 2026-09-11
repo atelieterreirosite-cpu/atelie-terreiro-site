@@ -253,7 +253,7 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
               >
                 <button
                   type="button"
-                  className={`font-display inline-flex items-center gap-3 text-2xl font-light tracking-wide transition-all duration-300 motion-reduce:transition-none sm:text-3xl ${
+                  className={`font-display inline-flex items-center gap-3 text-xl font-light tracking-wide transition-all duration-300 motion-reduce:transition-none sm:text-2xl ${
                     sectionActive ? "text-white" : "text-white/90 hover:text-white"
                   }`}
                   aria-expanded={portfolioOpen}
@@ -278,7 +278,7 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
                       <li key={child.href}>
                         <Link
                           href={child.href}
-                          className={`font-display text-xl font-light tracking-wide transition-colors duration-300 motion-reduce:transition-none ${
+                          className={`font-display text-lg font-light tracking-wide transition-colors duration-300 motion-reduce:transition-none ${
                             active ? "text-white" : "text-white/70 hover:text-white"
                           }`}
                           aria-current={active ? "page" : undefined}
@@ -298,7 +298,7 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
             <Link
               key={item.href}
               href={item.href}
-              className={`font-display text-2xl font-light tracking-wide transition-all duration-300 motion-reduce:transition-none sm:text-3xl ${
+              className={`font-display text-xl font-light tracking-wide transition-all duration-300 motion-reduce:transition-none sm:text-2xl ${
                 isActivePath(pathname, item.href)
                   ? "text-white"
                   : "text-white/90 hover:text-white"

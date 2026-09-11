@@ -38,6 +38,12 @@ export interface BaseACFContent {
   imagem?: ACFMediaValue<ACFImage>;
   anexo?: ACFMediaValue<ACFFile>;
   link_externo?: ACFValue<string>;
+  /** Imagens adicionais (capa permanece em `imagem`). */
+  galeria_imagem_1?: ACFMediaValue<ACFImage>;
+  galeria_imagem_2?: ACFMediaValue<ACFImage>;
+  galeria_imagem_3?: ACFMediaValue<ACFImage>;
+  galeria_imagem_4?: ACFMediaValue<ACFImage>;
+  galeria_imagem_5?: ACFMediaValue<ACFImage>;
 }
 
 export interface ProjectACF extends BaseACFContent {
@@ -153,6 +159,7 @@ export interface TeamACF {
 export interface GuiaACF {
   titulo?: ACFValue<string>;
   imagem?: ACFMediaValue<ACFImage> | "";
+  descricao?: ACFValue<string>;
 }
 
 export interface WordPressPost<TACF> {
@@ -236,6 +243,7 @@ export interface EventDetails {
   participants: string | null;
   registrationOpen: boolean;
   registrationLink: string | null;
+  gallery: ACFImage[];
 }
 
 export interface CourseDetails {
@@ -250,6 +258,7 @@ export interface CourseDetails {
   registrationOpen: boolean;
   registrationLink: string | null;
   price: string | null;
+  gallery: ACFImage[];
 }
 
 export interface WorkDetails {
@@ -261,6 +270,7 @@ export interface WorkDetails {
   videoUrl: string | null;
   videoFile: ACFFile | null;
   credits: string | null;
+  gallery: ACFImage[];
 }
 
 export interface PublicationDetails {
@@ -269,6 +279,7 @@ export interface PublicationDetails {
   year: string | null;
   relatedProjectId: number | null;
   credits: string | null;
+  gallery: ACFImage[];
 }
 
 export interface ExhibitionDetails {
@@ -280,6 +291,7 @@ export interface ExhibitionDetails {
   curation: string | null;
   artists: string | null;
   relatedProjectId: number | null;
+  gallery: ACFImage[];
 }
 
 export interface VideoDetails {
@@ -335,6 +347,7 @@ export interface GuiaContent {
   status: string;
   link: string;
   title: string;
+  description: string | null;
   image: ACFImage | null;
 }
 
@@ -416,8 +429,8 @@ export interface EditorialPageLinkACF {
 export interface ComplementarySectionACF {
   title?: ACFValue<string>;
   titulo?: ACFValue<string>;
-  items?: ACFValue<unknown>;
-  itens?: ACFValue<unknown>;
+  description?: ACFValue<string>;
+  descricao?: ACFValue<string>;
 }
 
 export interface EditorialPageACF {
@@ -460,7 +473,7 @@ export interface WordPressEditorialPage {
 
 export interface ComplementarySectionContent {
   title: string;
-  items: string[];
+  description: string;
 }
 
 /** Prática normalizada a partir de `practices_items` (pares título + descrição). */

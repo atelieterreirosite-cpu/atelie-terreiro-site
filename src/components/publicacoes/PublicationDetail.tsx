@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { EditorialText } from "@/components/ui/EditorialText";
+import { ContentGallery } from "@/components/ui/ContentGallery";
 import { MediaPlaceholder } from "@/components/ui/MediaPlaceholder";
 import type { PublicationView } from "@/types/views";
 
@@ -42,7 +43,7 @@ export function PublicationDetail({ publication }: PublicationDetailProps) {
           </div>
         ) : null}
 
-        <h1 className="font-display mt-4 text-3xl leading-tight font-light tracking-wide text-balance sm:text-4xl md:text-5xl lg:text-6xl">
+        <h1 className="font-display mt-4 text-xl leading-tight font-light tracking-wide text-balance sm:text-2xl md:text-3xl lg:text-4xl">
           {publication.title}
         </h1>
       </header>
@@ -109,6 +110,15 @@ export function PublicationDetail({ publication }: PublicationDetailProps) {
           </a>
         ) : null}
       </div>
+
+      {publication.gallery.length > 0 ? (
+        <div className="mx-auto mt-16 max-w-7xl px-6 md:mt-20 md:px-10">
+          <ContentGallery
+            images={publication.gallery}
+            label={`Galeria — ${publication.title}`}
+          />
+        </div>
+      ) : null}
     </article>
   );
 }

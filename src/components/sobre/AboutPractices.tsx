@@ -13,7 +13,7 @@ export function AboutPractices({ id, title, intro, items, note }: AboutPractices
   return (
     <section id={id} className="scroll-mt-28 space-y-8">
       {title ? (
-        <h2 className="font-display text-3xl font-light tracking-wide md:text-4xl">{title}</h2>
+        <h2 className="font-display text-2xl font-light tracking-wide md:text-3xl">{title}</h2>
       ) : null}
 
       <EditorialText

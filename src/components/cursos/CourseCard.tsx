@@ -25,7 +25,7 @@ export function CourseCard({ course }: CourseCardProps) {
         <div className="space-y-2 sm:space-y-3">
           <CourseStatusBadge status={course.status} />
           {course.period ? (
-            <p className="font-display text-xl leading-tight font-light tracking-wide sm:text-2xl md:text-3xl">
+            <p className="font-display text-xs leading-tight font-light tracking-wide sm:text-sm md:text-base">
               {course.period}
             </p>
           ) : null}
@@ -54,7 +54,7 @@ export function CourseCard({ course }: CourseCardProps) {
             ) : null}
           </div>
 
-          <h2 className="font-display text-xl leading-snug font-light tracking-wide transition-colors duration-300 group-hover:text-accent sm:text-2xl md:text-3xl">
+          <h2 className="font-display text-sm leading-snug font-light tracking-wide transition-colors duration-300 group-hover:text-accent sm:text-base md:text-lg">
             {course.title}
           </h2>
 

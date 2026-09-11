@@ -2,7 +2,7 @@ import { getPublications } from "@/lib/cms/client";
 import type { ACFFile, CMSCollection, PublicationContent } from "@/lib/cms/models";
 import type { PublicationView, WorkAttachment } from "@/types/views";
 
-import { mapImageAsset } from "./media";
+import { mapImageAsset, mapImageAssets } from "./media";
 
 /**
  * Adapter CMS (`PublicationContent`) → view-model da UI.
@@ -37,6 +37,7 @@ export function mapPublicationToView(item: PublicationContent): PublicationView 
     descriptionText: item.content.descriptionText,
     credits: item.details.credits ?? undefined,
     featuredImage: mapImageAsset(item.content.image, item.content.title),
+    gallery: mapImageAssets(item.details.gallery, item.content.title),
     attachment: mapAttachment(item.content.attachment),
     externalLink: item.content.externalLink ?? undefined,
   };

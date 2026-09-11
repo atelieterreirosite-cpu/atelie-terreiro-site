@@ -1,23 +1,14 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { EditorialText } from "@/components/ui/EditorialText";
-import { ImageSlider } from "@/components/ui/ImageSlider";
+import { ContentGallery } from "@/components/ui/ContentGallery";
 import { MediaPlaceholder } from "@/components/ui/MediaPlaceholder";
 import { VideoEmbed } from "@/components/ui/VideoEmbed";
-import type { ContentVideo, ImageAsset, ProjectView } from "@/types/views";
+import type { ContentVideo, ProjectView } from "@/types/views";
 
 interface ProjectDetailProps {
   project: ProjectView;
-}
-
-function resolveSliderImages(project: ProjectView): ImageAsset[] {
-  if (project.gallery.length > 0) {
-    return project.gallery;
-  }
-  if (project.featuredImage) {
-    return [project.featuredImage];
-  }
-  return [];
 }
 
 function ProjectVideo({ video }: { video: ContentVideo }) {
@@ -32,8 +23,7 @@ function ProjectVideo({ video }: { video: ContentVideo }) {
 }
 
 export function ProjectDetail({ project }: ProjectDetailProps) {
-  const sliderImages = resolveSliderImages(project);
-  const videoAsHero = Boolean(project.video) && sliderImages.length === 0;
+  const videoAsHero = Boolean(project.video) && !project.featuredImage;
 
   return (
     <article className="pb-24">
@@ -57,14 +47,23 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           ) : null}
         </div>
 
-        <h1 className="font-display mt-4 text-3xl leading-tight font-light tracking-wide text-balance sm:text-4xl md:text-5xl lg:text-6xl">
+        <h1 className="font-display mt-4 text-xl leading-tight font-light tracking-wide text-balance sm:text-2xl md:text-3xl lg:text-4xl">
           {project.title}
         </h1>
       </header>
 
       <div className="mx-auto mt-12 max-w-7xl px-6 md:px-10">
-        {sliderImages.length > 0 ? (
-          <ImageSlider images={sliderImages} label={`Imagens de ${project.title}`} />
+        {project.featuredImage ? (
+          <div className="relative aspect-[16/10] overflow-hidden bg-accent/5">
+            <Image
+              src={project.featuredImage.src}
+              alt={project.featuredImage.alt}
+              fill
+              priority
+              sizes="(max-width: 1280px) 100vw, 1280px"
+              className="object-cover"
+            />
+          </div>
         ) : project.video ? (
           <ProjectVideo video={project.video} />
         ) : (
@@ -134,6 +133,12 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           </section>
         ) : null}
       </div>
+
+      {project.gallery.length > 0 ? (
+        <div className="mx-auto mt-16 max-w-7xl px-6 md:mt-20 md:px-10">
+          <ContentGallery images={project.gallery} label={`Galeria — ${project.title}`} />
+        </div>
+      ) : null}
     </article>
   );
 }

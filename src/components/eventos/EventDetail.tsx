@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { EditorialText } from "@/components/ui/EditorialText";
+import { ContentGallery } from "@/components/ui/ContentGallery";
 import type { EventModality, EventView } from "@/types/views";
 
 import { EventStatusBadge } from "./EventStatusBadge";
@@ -51,7 +52,7 @@ export function EventDetail({ event }: EventDetailProps) {
           <p className="text-sm text-muted">{modalityLabels[event.modality]}</p>
         </div>
 
-        <h1 className="font-display mt-4 text-3xl leading-tight font-light tracking-wide text-balance sm:text-4xl md:text-5xl">
+        <h1 className="font-display mt-4 text-xl leading-tight font-light tracking-wide text-balance sm:text-2xl md:text-3xl">
           {event.title}
         </h1>
       </header>
@@ -136,6 +137,12 @@ export function EventDetail({ event }: EventDetailProps) {
           </a>
         ) : null}
       </div>
+
+      {event.gallery.length > 0 ? (
+        <div className="mx-auto mt-16 max-w-4xl px-6 md:mt-20 md:px-10">
+          <ContentGallery images={event.gallery} label={`Galeria — ${event.title}`} />
+        </div>
+      ) : null}
     </article>
   );
 }

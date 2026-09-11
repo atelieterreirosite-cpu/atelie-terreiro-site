@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { VimeoBackgroundPlayer } from "@/components/ui/VimeoBackgroundPlayer";
 import { YouTubeBackgroundPlayer } from "@/components/ui/YouTubeBackgroundPlayer";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import type { HomeVideo } from "@/types/views";
@@ -55,7 +56,7 @@ function ReducedMotionFallback({ video }: { video: HomeVideo }) {
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-accent px-6">
       <div className="max-w-md space-y-6 text-center">
-        <p className="font-display text-3xl font-light tracking-wide text-white md:text-4xl">
+        <p className="font-display text-2xl font-light tracking-wide text-white md:text-3xl">
           {video.title}
         </p>
         <p className="text-sm leading-relaxed text-white/80">{video.description}</p>
@@ -94,22 +95,7 @@ function HomeVideoLayer({ video, fit }: { video: HomeVideo; fit: "fill" | "width
   }
 
   if (video.provider === "vimeo" && video.videoId) {
-    const params = new URLSearchParams({
-      autoplay: "1",
-      muted: "1",
-      loop: "1",
-      background: "1",
-    });
-
-    return (
-      <iframe
-        className="absolute inset-0 h-full w-full border-0"
-        src={`https://player.vimeo.com/video/${video.videoId}?${params.toString()}`}
-        title={video.title}
-        allow="autoplay; fullscreen"
-        referrerPolicy="strict-origin-when-cross-origin"
-      />
-    );
+    return <VimeoBackgroundPlayer video={video} fit={fit} />;
   }
 
   return (
@@ -127,10 +113,17 @@ export function HomeHero({ video }: HomeHeroProps) {
   const scrollableHeight = `max(100dvh, calc(56.25vw + ${SCROLL_BUFFER_VH}vh))`;
   const label = video?.title || "Início";
 
+  // Em viewports mais estreitos/altos (celular, iPad), a largura manda:
+  // vídeo 16:9 em 100% da largura, sem crop por altura fixa (100dvh + cover).
+  // Em desktop largo (aspect ≥ 16/9), mantém a composição atual com buffer rolável.
+  const sectionClassName = isWide
+    ? "relative w-full bg-black"
+    : "relative aspect-video w-full bg-black";
+
   return (
     <section
       id="conteudo-principal"
-      className={`relative w-full bg-black ${isWide ? "" : "h-[100dvh] min-h-[480px] overflow-hidden"}`}
+      className={sectionClassName}
       style={isWide ? { minHeight: scrollableHeight } : undefined}
       aria-label={label}
     >
@@ -138,11 +131,9 @@ export function HomeHero({ video }: HomeHeroProps) {
         <ReducedMotionFallback video={video} />
       ) : video ? (
         <>
-          <HomeVideoLayer video={video} fit={isWide ? "width" : "fill"} />
+          <HomeVideoLayer video={video} fit="width" />
           <div
-            className={`pointer-events-none absolute inset-x-0 top-0 z-[5] bg-gradient-to-t from-black/30 via-transparent to-black/20 ${
-              isWide ? "h-[56.25vw]" : "inset-0 h-auto"
-            }`}
+            className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-[56.25vw] bg-gradient-to-t from-black/30 via-transparent to-black/20"
             aria-hidden="true"
           />
         </>

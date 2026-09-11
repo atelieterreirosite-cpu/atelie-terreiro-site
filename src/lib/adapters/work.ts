@@ -2,7 +2,7 @@ import { getWorks } from "@/lib/cms/client";
 import type { ACFFile, CMSCollection, WorkContent } from "@/lib/cms/models";
 import type { WorkAttachment, WorkView } from "@/types/views";
 
-import { mapImageAsset } from "./media";
+import { mapImageAsset, mapImageAssets } from "./media";
 import { mapContentVideo } from "./video";
 
 /**
@@ -39,6 +39,7 @@ export function mapWorkToView(item: WorkContent): WorkView {
     descriptionText: item.content.descriptionText,
     credits: item.details.credits ?? undefined,
     featuredImage: mapImageAsset(item.content.image, item.content.title),
+    gallery: mapImageAssets(item.details.gallery, item.content.title),
     video: mapContentVideo(item.details.videoFile, item.details.videoUrl, item.content.title),
     attachment: mapAttachment(item.content.attachment),
     externalLink: item.content.externalLink ?? undefined,

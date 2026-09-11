@@ -32,7 +32,7 @@ export function EventCard({ event }: EventCardProps) {
         <div className="space-y-2 sm:space-y-3 md:hidden">
           <EventStatusBadge status={event.status} />
           {event.date ? (
-            <p className="font-display text-xl leading-tight font-light tracking-wide sm:text-2xl">
+            <p className="font-display text-xs leading-tight font-light tracking-wide sm:text-sm">
               {event.date}
             </p>
           ) : null}
@@ -56,7 +56,7 @@ export function EventCard({ event }: EventCardProps) {
           <div className="hidden flex-wrap items-baseline gap-x-4 gap-y-2 md:flex">
             <EventStatusBadge status={event.status} />
             {event.date ? (
-              <p className="font-display text-2xl leading-none font-light tracking-wide lg:text-3xl">
+              <p className="font-display text-sm leading-none font-light tracking-wide lg:text-base">
                 {event.date}
               </p>
             ) : null}
@@ -70,7 +70,7 @@ export function EventCard({ event }: EventCardProps) {
             <p className="text-xs text-muted">{modalityLabels[event.modality]}</p>
           </div>
 
-          <h2 className="font-display text-xl leading-snug font-light tracking-wide transition-colors duration-300 group-hover:text-accent sm:text-2xl md:text-3xl">
+          <h2 className="font-display text-sm leading-snug font-light tracking-wide transition-colors duration-300 group-hover:text-accent sm:text-base md:text-lg">
             {event.title}
           </h2>
 

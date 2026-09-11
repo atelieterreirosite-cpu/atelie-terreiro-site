@@ -37,7 +37,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             {project.type ? <p className="text-xs text-muted">{project.type}</p> : null}
           </div>
 
-          <h2 className="font-display text-xl leading-snug font-light tracking-wide transition-colors duration-300 group-hover:text-accent sm:text-2xl md:text-3xl">
+          <h2 className="font-display text-sm leading-snug font-light tracking-wide transition-colors duration-300 group-hover:text-accent sm:text-base md:text-lg">
             {project.title}
           </h2>
 

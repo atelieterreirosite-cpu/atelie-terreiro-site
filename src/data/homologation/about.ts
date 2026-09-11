@@ -75,11 +75,11 @@ export const aboutPageContent: AboutPageView = {
     sections: [
       {
         title: "Formação (homologação)",
-        items: ["Item de exemplo A", "Item de exemplo B"],
+        description: "Item de exemplo A. Item de exemplo B.",
       },
       {
         title: "Exposições (homologação)",
-        items: ["Item de exemplo C"],
+        description: "Item de exemplo C.",
       },
     ],
   },

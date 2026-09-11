@@ -68,7 +68,7 @@ export function TeamMember({ member, index }: TeamMemberProps) {
           {padIndex(index)}
         </p>
 
-        <h2 className="font-display mt-4 text-4xl leading-none font-light tracking-wide sm:text-5xl md:text-6xl lg:text-7xl">
+        <h2 className="font-display mt-4 text-xl leading-none font-light tracking-wide sm:text-2xl md:text-3xl">
           {member.name}
         </h2>
 

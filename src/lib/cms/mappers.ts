@@ -40,11 +40,11 @@ type UnknownRecord = Record<string, unknown>;
 export interface ResolvedPostMedia {
   image: ACFImage | null;
   attachment: ACFFile | null;
+  gallery: ACFImage[];
 }
 
 export interface ResolvedProjectMedia extends ResolvedPostMedia {
   videoFile: ACFFile | null;
-  gallery: ACFImage[];
 }
 
 function isRecord(value: unknown): value is UnknownRecord {
@@ -384,6 +384,7 @@ export function mapEvent(post: WordPressPost<EventACF>, media: ResolvedPostMedia
     participants: normalizeText(post.acf.participantes),
     registrationOpen: normalizeBoolean(post.acf.inscricoes_abertas),
     registrationLink: safeHttpUrl(post.acf.link_inscricao),
+    gallery: media.gallery,
   });
 }
 
@@ -400,6 +401,7 @@ export function mapCourse(post: WordPressPost<CourseACF>, media: ResolvedPostMed
     registrationOpen: normalizeBoolean(post.acf.inscricoes_abertas),
     registrationLink: safeHttpUrl(post.acf.link_inscricao),
     price: normalizeText(post.acf.valor),
+    gallery: media.gallery,
   });
 }
 
@@ -417,6 +419,7 @@ export function mapWork(
     videoUrl: safeHttpUrl(post.acf.video_url),
     videoFile,
     credits: normalizeText(post.acf.creditos),
+    gallery: media.gallery,
   });
 }
 
@@ -430,6 +433,7 @@ export function mapPublication(
     year: normalizeText(post.acf.ano),
     relatedProjectId: normalizeRelationId(post.acf.projeto_relacionado),
     credits: normalizeText(post.acf.creditos),
+    gallery: media.gallery,
   });
 }
 
@@ -446,6 +450,7 @@ export function mapExhibition(
     curation: normalizeText(post.acf.curadoria),
     artists: normalizeText(post.acf.artistas),
     relatedProjectId: normalizeRelationId(post.acf.projeto_relacionado),
+    gallery: media.gallery,
   });
 }
 
@@ -591,6 +596,7 @@ export function mapGuia(
       normalizeText(post.acf.titulo) ??
       normalizeText(post.title?.rendered) ??
       `Guia #${post.id}`,
+    description: normalizeEditorialText(post.acf.descricao),
     image,
   };
 }
@@ -659,9 +665,10 @@ function mapComplementarySections(value: unknown): ComplementarySectionContent[]
   for (const entry of parsed) {
     if (!isRecord(entry)) continue;
     const title = normalizeEditorialText(entry.title ?? entry.titulo) ?? "";
-    const items = normalizeStringList(entry.items ?? entry.itens ?? entry.item);
-    if (!title && items.length === 0) continue;
-    sections.push({ title, items });
+    const description =
+      normalizeEditorialText(entry.description ?? entry.descricao) ?? "";
+    if (!title && !description) continue;
+    sections.push({ title, description });
   }
 
   return sections;

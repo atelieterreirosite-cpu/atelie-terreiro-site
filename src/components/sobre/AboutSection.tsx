@@ -10,7 +10,7 @@ export function AboutSection({ block }: AboutSectionProps) {
   return (
     <section id={block.id} className="scroll-mt-28 space-y-8">
       {block.title ? (
-        <h2 className="font-display text-2xl font-light tracking-wide sm:text-3xl md:text-4xl">
+        <h2 className="font-display text-xl font-light tracking-wide sm:text-2xl md:text-3xl">
           {block.title}
         </h2>
       ) : null}
