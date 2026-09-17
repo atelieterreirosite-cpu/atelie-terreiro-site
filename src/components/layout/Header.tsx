@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
 import {
@@ -18,6 +18,14 @@ type HeaderVariant = "overlay" | "solid";
 interface HeaderProps {
   variant?: HeaderVariant;
   siteName: string;
+}
+
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 }
 
 function Chevron({ open }: { open: boolean }) {
@@ -53,7 +61,6 @@ function DesktopPortfolioItem({
 }) {
   const children = item.children ?? [];
   const submenuId = useId();
-  const wrapRef = useRef<HTMLLIElement>(null);
   const [open, setOpen] = useState(false);
   const sectionActive = isNavItemActive(pathname, item);
 
@@ -89,35 +96,31 @@ function DesktopPortfolioItem({
 
   return (
     <li
-      ref={wrapRef}
       className="relative"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <button
-        type="button"
-        className={`${getNavLinkClass(item.href, sectionActive)} inline-flex items-center gap-1.5`}
-        aria-expanded={open}
-        aria-controls={submenuId}
-        aria-haspopup="true"
-        onClick={(event) => {
-          if (event.detail === 0) {
-            setOpen((current) => !current);
-            return;
-          }
-          setOpen(true);
-        }}
-        onBlur={() => {
-          requestAnimationFrame(() => {
-            if (!wrapRef.current?.contains(document.activeElement)) {
-              setOpen(false);
-            }
-          });
-        }}
-      >
-        {item.label}
-        <Chevron open={open} />
-      </button>
+      <div className="inline-flex items-center gap-1.5">
+        <Link
+          href={item.href}
+          className={getNavLinkClass(item.href, sectionActive)}
+          aria-current={sectionActive ? "page" : undefined}
+          onClick={() => setOpen(false)}
+        >
+          {item.label}
+        </Link>
+        <button
+          type="button"
+          className={`${getNavLinkClass(item.href, sectionActive)} inline-flex items-center`}
+          aria-expanded={open}
+          aria-controls={submenuId}
+          aria-haspopup="true"
+          aria-label={`Abrir submenu de ${item.label}`}
+          onClick={() => setOpen((current) => !current)}
+        >
+          <Chevron open={open} />
+        </button>
+      </div>
 
       <ul
         id={submenuId}
@@ -150,18 +153,16 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
   const [portfolioOpen, setPortfolioOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [menuPathname, setMenuPathname] = useState(pathname);
+  const mounted = useIsClient();
   const isOverlay = variant === "overlay";
   const mobileSubmenuId = useId();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
+  if (menuPathname !== pathname) {
+    setMenuPathname(pathname);
     setMenuOpen(false);
     setPortfolioOpen(false);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -171,25 +172,31 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
   }, [menuOpen]);
 
   useEffect(() => {
-    if (!menuOpen) {
-      setPortfolioOpen(false);
-      return;
-    }
-
-    const portfolioItem = mainNavigation.find((item) => item.children?.length);
-    if (portfolioItem && isNavItemActive(pathname, portfolioItem)) {
-      setPortfolioOpen(true);
-    }
+    if (!menuOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setMenuOpen(false);
+        setPortfolioOpen(false);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [menuOpen, pathname]);
+  }, [menuOpen]);
+
+  const closeMenu = () => {
+    setMenuOpen(false);
+    setPortfolioOpen(false);
+  };
+
+  const openMobileMenu = () => {
+    const portfolioItem = mainNavigation.find((item) => item.children?.length);
+    setMenuOpen(true);
+    if (portfolioItem && isNavItemActive(pathname, portfolioItem)) {
+      setPortfolioOpen(true);
+    }
+  };
 
   const headerClass = isOverlay
     ? `fixed inset-x-0 top-0 bg-gradient-to-b from-black/50 via-black/20 to-transparent pt-[env(safe-area-inset-top)] ${menuOpen ? "z-[60]" : "z-50"}`
@@ -251,45 +258,59 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
                 className="flex w-full max-w-xs flex-col items-center"
                 style={motionStyle}
               >
-                <button
-                  type="button"
-                  className={`font-display inline-flex items-center gap-3 text-xl font-light tracking-wide transition-all duration-300 motion-reduce:transition-none sm:text-2xl ${
-                    sectionActive ? "text-white" : "text-white/90 hover:text-white"
-                  }`}
-                  aria-expanded={portfolioOpen}
-                  aria-controls={mobileSubmenuId}
-                  onClick={() => setPortfolioOpen((current) => !current)}
-                >
-                  {item.label}
-                  <span aria-hidden="true" className="text-lg text-white/70">
-                    {portfolioOpen ? "−" : "+"}
-                  </span>
-                </button>
+                <div className="flex flex-col items-center">
+                  <div className="inline-flex items-center gap-3">
+                    <Link
+                      href={item.href}
+                      className={`font-display text-xl font-light tracking-wide transition-all duration-300 motion-reduce:transition-none sm:text-2xl ${
+                        sectionActive ? "text-white" : "text-white/90 hover:text-white"
+                      }`}
+                      aria-current={sectionActive ? "page" : undefined}
+                      onClick={closeMenu}
+                    >
+                      {item.label}
+                    </Link>
+                    <button
+                      type="button"
+                      className="font-display text-lg text-white/70 transition-colors hover:text-white"
+                      aria-expanded={portfolioOpen}
+                      aria-controls={mobileSubmenuId}
+                      aria-label={
+                        portfolioOpen
+                          ? `Recolher submenu de ${item.label}`
+                          : `Expandir submenu de ${item.label}`
+                      }
+                      onClick={() => setPortfolioOpen((current) => !current)}
+                    >
+                      <span aria-hidden="true">{portfolioOpen ? "−" : "+"}</span>
+                    </button>
+                  </div>
 
-                <ul
-                  id={mobileSubmenuId}
-                  className={`flex flex-col items-center gap-3 pt-4 ${portfolioOpen ? "" : "hidden"}`}
-                  hidden={!portfolioOpen}
-                >
-                  {item.children.map((child) => {
-                    const active = isActivePath(pathname, child.href);
+                  <ul
+                    id={mobileSubmenuId}
+                    className={`flex flex-col items-center gap-3 pt-4 ${portfolioOpen ? "" : "hidden"}`}
+                    hidden={!portfolioOpen}
+                  >
+                    {item.children.map((child) => {
+                      const active = isActivePath(pathname, child.href);
 
-                    return (
-                      <li key={child.href}>
-                        <Link
-                          href={child.href}
-                          className={`font-display text-lg font-light tracking-wide transition-colors duration-300 motion-reduce:transition-none ${
-                            active ? "text-white" : "text-white/70 hover:text-white"
-                          }`}
-                          aria-current={active ? "page" : undefined}
-                          onClick={() => setMenuOpen(false)}
-                        >
-                          {child.label}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+                      return (
+                        <li key={child.href}>
+                          <Link
+                            href={child.href}
+                            className={`font-display text-lg font-light tracking-wide transition-colors duration-300 motion-reduce:transition-none ${
+                              active ? "text-white" : "text-white/70 hover:text-white"
+                            }`}
+                            aria-current={active ? "page" : undefined}
+                            onClick={closeMenu}
+                          >
+                            {child.label}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </div>
             );
           }
@@ -305,7 +326,7 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
               }`}
               style={motionStyle}
               aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
-              onClick={() => setMenuOpen(false)}
+              onClick={closeMenu}
             >
               {item.label}
             </Link>
@@ -325,7 +346,7 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
       </a>
 
       <div className="mx-auto flex h-[var(--header-height)] max-w-7xl items-center justify-between px-6 md:px-10">
-        <Link href="/" className={logoClass} onClick={() => setMenuOpen(false)}>
+        <Link href="/" className={logoClass} onClick={closeMenu}>
           {siteName}
         </Link>
 
@@ -364,7 +385,13 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
           aria-expanded={menuOpen}
           aria-controls="mobile-menu"
           aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
-          onClick={() => setMenuOpen((open) => !open)}
+          onClick={() => {
+            if (menuOpen) {
+              closeMenu();
+              return;
+            }
+            openMobileMenu();
+          }}
         >
           <span
             className={`block h-px w-6 bg-current transition-all duration-300 motion-reduce:transition-none ${menuOpen ? "translate-y-[3.5px] rotate-45" : ""}`}

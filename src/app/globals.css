@@ -189,6 +189,23 @@
   .prose-editorial h3 {
     font-size: 1.15rem;
   }
+
+  /**
+   * Moldura editorial do Portfólio: altura limitada, imagem centralizada
+   * sem crop (object-contain no elemento img).
+   */
+  .portfolio-media-frame {
+    width: 100%;
+    height: min(70vh, 36rem);
+    min-height: 14rem;
+  }
+
+  @media (max-width: 767px) {
+    .portfolio-media-frame {
+      height: min(55vh, 28rem);
+      min-height: 12rem;
+    }
+  }
 }
 
 @keyframes page-fade-in {

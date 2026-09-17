@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useId, useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
 import { EditorialText } from "@/components/ui/EditorialText";
@@ -14,6 +14,14 @@ interface MediaLightboxProps {
   title?: string;
   description?: string;
   labelledBy?: string;
+}
+
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 }
 
 export function MediaLightbox({
@@ -29,12 +37,8 @@ export function MediaLightbox({
   const closeRef = useRef<HTMLButtonElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const previousScrollRef = useRef(0);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsClient();
   const hasMeta = Boolean(title || description);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useLayoutEffect(() => {
     if (!open || !mounted) return;

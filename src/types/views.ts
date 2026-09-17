@@ -1,6 +1,6 @@
 /**
  * View-models de apresentação.
- * Não substituem `src/lib/cms/models.ts`. Adapters CMS → estas props virão depois.
+ * Não substituem `src/lib/cms/models.ts`. Adapters CMS → estas props.
  */
 
 export interface ImageAsset {
@@ -25,6 +25,49 @@ export interface ContentVideo {
   url?: string;
   title: string;
   description?: string;
+}
+
+/** Categorias do Portfólio unificado (`/portfolio/`). */
+export type PortfolioCategory =
+  | "obra"
+  | "projeto"
+  | "exposicao"
+  | "publicacao"
+  | "video";
+
+export interface PortfolioCaptionedImage {
+  image: ImageAsset;
+  caption?: string;
+}
+
+export interface PortfolioCaptionedVideo {
+  video: ContentVideo;
+  caption?: string;
+}
+
+/**
+ * Item editorial do Portfólio — mesma estrutura para os cinco CPTs.
+ * Sem página individual: renderizado aberto em `/portfolio/`.
+ */
+export interface PortfolioItemView {
+  id: number;
+  slug: string;
+  type: PortfolioCategory;
+  title: string;
+  descriptionText: string | null;
+  coverImage?: ImageAsset;
+  coverCaption?: string;
+  images: PortfolioCaptionedImage[];
+  videos: PortfolioCaptionedVideo[];
+  /** ID de âncora estável (`projeto-video-gira`). */
+  anchorId: string;
+}
+
+export interface PortfolioSectionView {
+  id: string;
+  type: PortfolioCategory;
+  label: string;
+  items: PortfolioItemView[];
 }
 
 /** View-model da Home. Não faz parte do contrato CMS (`src/lib/cms`). */

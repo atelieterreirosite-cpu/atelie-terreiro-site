@@ -101,7 +101,9 @@ function mapEventToMapped(item: EventContent): MappedEvent {
   };
 }
 
-function stripSortKey({ sortKey: _sortKey, ...view }: MappedEvent): EventView {
+function stripSortKey(mapped: MappedEvent): EventView {
+  const { sortKey, ...view } = mapped;
+  void sortKey;
   return view;
 }
 

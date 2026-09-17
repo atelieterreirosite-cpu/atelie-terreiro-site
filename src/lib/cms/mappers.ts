@@ -13,6 +13,11 @@ import type {
   ExhibitionContent,
   NormalizedBaseContent,
   OptionsContent,
+  PortfolioACF,
+  PortfolioCaptionedImageContent,
+  PortfolioCaptionedVideoContent,
+  PortfolioContent,
+  PortfolioType,
   PracticeItemContent,
   ProjectACF,
   ProjectContent,
@@ -26,7 +31,6 @@ import type {
   TeamLink,
   VideoACF,
   VideoContent,
-  VideoPlatform,
   WordPressEditorialPage,
   WordPressMedia,
   WordPressOptions,
@@ -43,8 +47,11 @@ export interface ResolvedPostMedia {
   gallery: ACFImage[];
 }
 
-export interface ResolvedProjectMedia extends ResolvedPostMedia {
-  videoFile: ACFFile | null;
+export interface ResolvedPortfolioMedia {
+  coverImage: ACFImage | null;
+  coverCaption: string | null;
+  images: PortfolioCaptionedImageContent[];
+  videos: PortfolioCaptionedVideoContent[];
 }
 
 function isRecord(value: unknown): value is UnknownRecord {
@@ -309,17 +316,6 @@ export function formatAcfDate(value: unknown): string | null {
   return text;
 }
 
-function normalizePlatform(value: unknown): VideoPlatform | null {
-  const platform = normalizeText(value)?.toLowerCase();
-  return platform === "youtube" ||
-    platform === "vimeo" ||
-    platform === "instagram" ||
-    platform === "wordpress" ||
-    platform === "outro"
-    ? platform
-    : null;
-}
-
 function baseContent<TACF extends { titulo?: unknown; resumo?: unknown; descricao?: unknown; link_externo?: unknown }>(
   post: WordPressPost<TACF>,
   media: ResolvedPostMedia,
@@ -356,19 +352,62 @@ function item<TACF extends { titulo?: unknown; resumo?: unknown; descricao?: unk
 
 export function mapProject(
   post: WordPressPost<ProjectACF>,
-  media: ResolvedProjectMedia,
+  media: ResolvedPortfolioMedia,
 ): ProjectContent {
-  return item(post, media, {
-    startYear: normalizeText(post.acf.ano_inicio),
-    endYear: normalizeText(post.acf.ano_fim),
-    ongoing: normalizeBoolean(post.acf.em_andamento),
-    location: normalizeText(post.acf.local),
-    participants: normalizeText(post.acf.participantes),
-    curation: normalizeText(post.acf.curadoria_coordenacao),
-    videoUrl: safeHttpUrl(post.acf.video_url),
-    videoFile: media.videoFile,
-    gallery: media.gallery,
-  });
+  return mapPortfolioItem(post, media, "projeto");
+}
+
+export function mapWork(
+  post: WordPressPost<WorkACF>,
+  media: ResolvedPortfolioMedia,
+): WorkContent {
+  return mapPortfolioItem(post, media, "obra");
+}
+
+export function mapPublication(
+  post: WordPressPost<PublicationACF>,
+  media: ResolvedPortfolioMedia,
+): PublicationContent {
+  return mapPortfolioItem(post, media, "publicacao");
+}
+
+export function mapExhibition(
+  post: WordPressPost<ExhibitionACF>,
+  media: ResolvedPortfolioMedia,
+): ExhibitionContent {
+  return mapPortfolioItem(post, media, "exposicao");
+}
+
+export function mapVideo(
+  post: WordPressPost<VideoACF>,
+  media: ResolvedPortfolioMedia,
+): VideoContent {
+  return mapPortfolioItem(post, media, "video");
+}
+
+export function mapPortfolioItem(
+  post: WordPressPost<PortfolioACF>,
+  media: ResolvedPortfolioMedia,
+  type: PortfolioType,
+): PortfolioContent {
+  return {
+    id: post.id,
+    date: post.date,
+    modified: post.modified,
+    slug: post.slug,
+    status: post.status,
+    link: post.link,
+    type,
+    title:
+      normalizeText(post.acf.titulo) ??
+      normalizeText(post.title?.rendered) ??
+      `Conteúdo #${post.id}`,
+    descriptionText: normalizeEditorialText(post.acf.descricao),
+    coverImage: media.coverImage,
+    coverCaption: media.coverCaption,
+    images: media.images,
+    videos: media.videos,
+  };
 }
 
 export function mapEvent(post: WordPressPost<EventACF>, media: ResolvedPostMedia): EventContent {
@@ -402,73 +441,6 @@ export function mapCourse(post: WordPressPost<CourseACF>, media: ResolvedPostMed
     registrationLink: safeHttpUrl(post.acf.link_inscricao),
     price: normalizeText(post.acf.valor),
     gallery: media.gallery,
-  });
-}
-
-export function mapWork(
-  post: WordPressPost<WorkACF>,
-  media: ResolvedPostMedia,
-  videoFile: ACFFile | null,
-): WorkContent {
-  return item(post, media, {
-    artist: normalizeText(post.acf.artista),
-    year: normalizeText(post.acf.ano),
-    technique: normalizeText(post.acf.tecnica),
-    dimensions: normalizeText(post.acf.dimensoes),
-    relatedProjectId: normalizeRelationId(post.acf.projeto_relacionado),
-    videoUrl: safeHttpUrl(post.acf.video_url),
-    videoFile,
-    credits: normalizeText(post.acf.creditos),
-    gallery: media.gallery,
-  });
-}
-
-export function mapPublication(
-  post: WordPressPost<PublicationACF>,
-  media: ResolvedPostMedia,
-): PublicationContent {
-  return item(post, media, {
-    publicationType: normalizeText(post.acf.tipo_publicacao),
-    authors: normalizeText(post.acf.autores),
-    year: normalizeText(post.acf.ano),
-    relatedProjectId: normalizeRelationId(post.acf.projeto_relacionado),
-    credits: normalizeText(post.acf.creditos),
-    gallery: media.gallery,
-  });
-}
-
-export function mapExhibition(
-  post: WordPressPost<ExhibitionACF>,
-  media: ResolvedPostMedia,
-): ExhibitionContent {
-  return item(post, media, {
-    startDate: formatAcfDate(post.acf.data_inicio),
-    endDate: formatAcfDate(post.acf.data_fim),
-    onDisplay: normalizeBoolean(post.acf.em_cartaz),
-    location: normalizeText(post.acf.local),
-    city: normalizeText(post.acf.cidade),
-    curation: normalizeText(post.acf.curadoria),
-    artists: normalizeText(post.acf.artistas),
-    relatedProjectId: normalizeRelationId(post.acf.projeto_relacionado),
-    gallery: media.gallery,
-  });
-}
-
-export function mapVideo(
-  post: WordPressPost<VideoACF>,
-  media: ResolvedPostMedia,
-  videoFile: ACFFile | null,
-): VideoContent {
-  return item(post, media, {
-    videoUrl: safeHttpUrl(post.acf.video_url),
-    videoFile,
-    platform: normalizePlatform(post.acf.plataforma),
-    publicationDate: formatAcfDate(post.acf.data_publicacao),
-    duration: normalizeText(post.acf.duracao),
-    participants: normalizeText(post.acf.participantes),
-    relatedProjectId: normalizeRelationId(post.acf.projeto_relacionado),
-    relatedEventId: normalizeRelationId(post.acf.evento_relacionado),
-    credits: normalizeText(post.acf.creditos),
   });
 }
 

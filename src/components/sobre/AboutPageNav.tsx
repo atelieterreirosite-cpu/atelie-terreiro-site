@@ -32,13 +32,22 @@ interface AboutLinksProps {
   links: RelatedLink[];
 }
 
-/** Rótulo público da seção; href `/arquivo/` permanece. */
+/** Normaliza rótulos legados de Arquivo → Portfólio. */
 function publicLinkLabel(link: RelatedLink): string {
-  const path = link.href.replace(/\/$/, "") || "/";
-  if (path === "/arquivo" && (link.label === "Arquivo" || link.label === "Arquivo / Portfólio")) {
+  const path = link.href.replace(/\/$/, "").split("#")[0] || "/";
+  if (
+    (path === "/arquivo" || path === "/portfolio") &&
+    (link.label === "Arquivo" || link.label === "Arquivo / Portfólio")
+  ) {
     return "Portfólio";
   }
   return link.label;
+}
+
+function publicLinkHref(link: RelatedLink): string {
+  const path = link.href.replace(/\/$/, "").split("#")[0] || "/";
+  if (path === "/arquivo") return "/portfolio/";
+  return link.href;
 }
 
 export function AboutLinks({ links }: AboutLinksProps) {
@@ -49,7 +58,7 @@ export function AboutLinks({ links }: AboutLinksProps) {
         {links.map((link) => (
           <li key={link.href}>
             <Link
-              href={link.href}
+              href={publicLinkHref(link)}
               className="link-underline font-display text-sm font-light tracking-wide text-foreground/85 transition-colors duration-300 hover:text-foreground md:text-base"
             >
               {publicLinkLabel(link)}

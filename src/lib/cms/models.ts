@@ -38,7 +38,7 @@ export interface BaseACFContent {
   imagem?: ACFMediaValue<ACFImage>;
   anexo?: ACFMediaValue<ACFFile>;
   link_externo?: ACFValue<string>;
-  /** Imagens adicionais (capa permanece em `imagem`). */
+  /** Imagens adicionais (capa permanece em `imagem`) — Eventos/Cursos. */
   galeria_imagem_1?: ACFMediaValue<ACFImage>;
   galeria_imagem_2?: ACFMediaValue<ACFImage>;
   galeria_imagem_3?: ACFMediaValue<ACFImage>;
@@ -46,17 +46,46 @@ export interface BaseACFContent {
   galeria_imagem_5?: ACFMediaValue<ACFImage>;
 }
 
-export interface ProjectACF extends BaseACFContent {
-  ano_inicio?: ACFValue<string | number>;
-  ano_fim?: ACFValue<string | number>;
-  em_andamento?: ACFValue<boolean>;
-  local?: ACFValue<string>;
-  participantes?: ACFValue<string>;
-  curadoria_coordenacao?: ACFValue<string>;
-  video_url?: ACFValue<string>;
-  arquivo_video?: ACFMediaValue<ACFFile>;
-  atelie_gallery?: ACFValue<Array<ACFMediaValue<ACFImage>>>;
+/**
+ * Contrato ACF editorial unificado dos CPTs de Portfólio:
+ * obra | projeto | exposicao | publicacao | video.
+ *
+ * Campos legados (resumo, anexo, ano, local, galeria_imagem_*, video_url, etc.)
+ * não fazem mais parte deste modelo.
+ */
+export interface PortfolioACF {
+  titulo?: ACFValue<string>;
+  descricao?: ACFValue<string>;
+  imagem?: ACFMediaValue<ACFImage>;
+  ficha_tecnica_capa?: ACFValue<string>;
+  imagem_1?: ACFMediaValue<ACFImage>;
+  ficha_tecnica_imagem_1?: ACFValue<string>;
+  imagem_2?: ACFMediaValue<ACFImage>;
+  ficha_tecnica_imagem_2?: ACFValue<string>;
+  imagem_3?: ACFMediaValue<ACFImage>;
+  ficha_tecnica_imagem_3?: ACFValue<string>;
+  imagem_4?: ACFMediaValue<ACFImage>;
+  ficha_tecnica_imagem_4?: ACFValue<string>;
+  imagem_5?: ACFMediaValue<ACFImage>;
+  ficha_tecnica_imagem_5?: ACFValue<string>;
+  /** URL, arquivo ou ID de mídia. */
+  video_1?: ACFMediaValue<ACFFile> | ACFValue<string>;
+  ficha_tecnica_video_1?: ACFValue<string>;
+  video_2?: ACFMediaValue<ACFFile> | ACFValue<string>;
+  ficha_tecnica_video_2?: ACFValue<string>;
+  video_3?: ACFMediaValue<ACFFile> | ACFValue<string>;
+  ficha_tecnica_video_3?: ACFValue<string>;
+  video_4?: ACFMediaValue<ACFFile> | ACFValue<string>;
+  ficha_tecnica_video_4?: ACFValue<string>;
+  video_5?: ACFMediaValue<ACFFile> | ACFValue<string>;
+  ficha_tecnica_video_5?: ACFValue<string>;
 }
+
+export type ProjectACF = PortfolioACF;
+export type WorkACF = PortfolioACF;
+export type PublicationACF = PortfolioACF;
+export type ExhibitionACF = PortfolioACF;
+export type VideoACF = PortfolioACF;
 
 export interface EventACF extends BaseACFContent {
   data_inicio?: ACFValue<string>;
@@ -88,54 +117,12 @@ export interface CourseACF extends BaseACFContent {
   valor?: ACFValue<string>;
 }
 
-export interface WorkACF extends BaseACFContent {
-  artista?: ACFValue<string>;
-  ano?: ACFValue<string | number>;
-  tecnica?: ACFValue<string>;
-  dimensoes?: ACFValue<string>;
-  projeto_relacionado?: ACFValue<number | string | { ID?: number; id?: number }>;
-  video_url?: ACFValue<string>;
-  arquivo_video?: ACFMediaValue<ACFFile>;
-  creditos?: ACFValue<string>;
-}
-
-export interface PublicationACF extends BaseACFContent {
-  tipo_publicacao?: ACFValue<string>;
-  autores?: ACFValue<string>;
-  ano?: ACFValue<string | number>;
-  projeto_relacionado?: ACFValue<number | string | { ID?: number; id?: number }>;
-  creditos?: ACFValue<string>;
-}
-
-export interface ExhibitionACF extends BaseACFContent {
-  data_inicio?: ACFValue<string>;
-  data_fim?: ACFValue<string>;
-  em_cartaz?: ACFValue<boolean>;
-  local?: ACFValue<string>;
-  cidade?: ACFValue<string>;
-  curadoria?: ACFValue<string>;
-  artistas?: ACFValue<string>;
-  projeto_relacionado?: ACFValue<number | string | { ID?: number; id?: number }>;
-}
-
 export type VideoPlatform =
   | "youtube"
   | "vimeo"
   | "instagram"
   | "wordpress"
   | "outro";
-
-export interface VideoACF extends Omit<BaseACFContent, "anexo"> {
-  video_url?: ACFValue<string>;
-  arquivo_video?: ACFMediaValue<ACFFile>;
-  plataforma?: ACFValue<VideoPlatform>;
-  data_publicacao?: ACFValue<string>;
-  duracao?: ACFValue<string>;
-  participantes?: ACFValue<string>;
-  projeto_relacionado?: ACFValue<number | string | { ID?: number; id?: number }>;
-  evento_relacionado?: ACFValue<number | string | { ID?: number; id?: number }>;
-  creditos?: ACFValue<string>;
-}
 
 export interface TeamLinkACF {
   label?: ACFValue<string>;
@@ -220,16 +207,45 @@ export interface CMSItem<TDetails extends object> {
 }
 
 export interface ProjectDetails {
-  startYear: string | null;
-  endYear: string | null;
-  ongoing: boolean;
-  location: string | null;
-  participants: string | null;
-  curation: string | null;
+  coverCaption: string | null;
+  images: PortfolioCaptionedImageContent[];
+  videos: PortfolioCaptionedVideoContent[];
+}
+
+export interface PortfolioCaptionedImageContent {
+  image: ACFImage;
+  caption: string | null;
+}
+
+export interface PortfolioCaptionedVideoContent {
   videoUrl: string | null;
   videoFile: ACFFile | null;
-  gallery: ACFImage[];
+  caption: string | null;
 }
+
+export type PortfolioType = "obra" | "projeto" | "exposicao" | "publicacao" | "video";
+
+/** Conteúdo normalizado unificado dos cinco CPTs de Portfólio. */
+export interface PortfolioContent {
+  id: number;
+  date: string;
+  modified: string;
+  slug: string;
+  status: string;
+  link: string;
+  type: PortfolioType;
+  title: string;
+  descriptionText: string | null;
+  coverImage: ACFImage | null;
+  coverCaption: string | null;
+  images: PortfolioCaptionedImageContent[];
+  videos: PortfolioCaptionedVideoContent[];
+}
+
+export type WorkDetails = ProjectDetails;
+export type PublicationDetails = ProjectDetails;
+export type ExhibitionDetails = ProjectDetails;
+export type VideoDetails = ProjectDetails;
 
 export interface EventDetails {
   startDate: string | null;
@@ -261,58 +277,13 @@ export interface CourseDetails {
   gallery: ACFImage[];
 }
 
-export interface WorkDetails {
-  artist: string | null;
-  year: string | null;
-  technique: string | null;
-  dimensions: string | null;
-  relatedProjectId: number | null;
-  videoUrl: string | null;
-  videoFile: ACFFile | null;
-  credits: string | null;
-  gallery: ACFImage[];
-}
-
-export interface PublicationDetails {
-  publicationType: string | null;
-  authors: string | null;
-  year: string | null;
-  relatedProjectId: number | null;
-  credits: string | null;
-  gallery: ACFImage[];
-}
-
-export interface ExhibitionDetails {
-  startDate: string | null;
-  endDate: string | null;
-  onDisplay: boolean;
-  location: string | null;
-  city: string | null;
-  curation: string | null;
-  artists: string | null;
-  relatedProjectId: number | null;
-  gallery: ACFImage[];
-}
-
-export interface VideoDetails {
-  videoUrl: string | null;
-  videoFile: ACFFile | null;
-  platform: VideoPlatform | null;
-  publicationDate: string | null;
-  duration: string | null;
-  participants: string | null;
-  relatedProjectId: number | null;
-  relatedEventId: number | null;
-  credits: string | null;
-}
-
-export type ProjectContent = CMSItem<ProjectDetails>;
+export type ProjectContent = PortfolioContent;
+export type WorkContent = PortfolioContent;
+export type PublicationContent = PortfolioContent;
+export type ExhibitionContent = PortfolioContent;
+export type VideoContent = PortfolioContent;
 export type EventContent = CMSItem<EventDetails>;
 export type CourseContent = CMSItem<CourseDetails>;
-export type WorkContent = CMSItem<WorkDetails>;
-export type PublicationContent = CMSItem<PublicationDetails>;
-export type ExhibitionContent = CMSItem<ExhibitionDetails>;
-export type VideoContent = CMSItem<VideoDetails>;
 
 export interface TeamLink {
   label: string;

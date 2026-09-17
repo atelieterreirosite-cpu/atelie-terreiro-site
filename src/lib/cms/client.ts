@@ -15,6 +15,9 @@ import {
   mapWork,
   normalizeFile,
   normalizeImage,
+  normalizeEditorialText,
+  normalizeText,
+  type ResolvedPortfolioMedia,
   type ResolvedPostMedia,
 } from "./mappers";
 import type {
@@ -33,6 +36,9 @@ import type {
   GuiaACF,
   GuiaContent,
   OptionsContent,
+  PortfolioACF,
+  PortfolioCaptionedImageContent,
+  PortfolioCaptionedVideoContent,
   ProjectACF,
   ProjectContent,
   PublicationACF,
@@ -104,6 +110,35 @@ function fetchMedia(id: number): Promise<WordPressMedia> {
   return request;
 }
 
+function safeHttpUrl(value: unknown): string | null {
+  const text = normalizeText(value);
+  if (!text) return null;
+
+  try {
+    const url = new URL(text);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasMediaValue(value: unknown): boolean {
+  if (value === false || value === null || value === undefined || value === "") return false;
+  if (typeof value === "number") return Number.isInteger(value) && value > 0;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    if (/^\d+$/.test(trimmed) && Number(trimmed) > 0) return true;
+    return Boolean(safeHttpUrl(trimmed));
+  }
+  if (typeof value === "object") return true;
+  return false;
+}
+
 async function resolveImage(value: unknown): Promise<ACFImage | null> {
   const direct = normalizeImage(value);
   if (direct) return direct;
@@ -155,10 +190,8 @@ function hasGalleryMedia(value: unknown): boolean {
 }
 
 /**
- * Prioriza `galeria_imagem_1…5` (contrato ACF atual).
- * Quando `atelie_gallery` (legado de `projeto`) já traz objetos com URL,
- * reutiliza esses objetos na ordem dos slots — evita roundtrip em `/media`
- * (alguns anexos retornam 401).
+ * Prioriza `galeria_imagem_1…5` (Eventos/Cursos).
+ * Fallback legado `atelie_gallery` quando presente.
  * A capa (`imagem`) nunca entra nesta lista.
  */
 function collectGallerySources(post: {
@@ -219,18 +252,6 @@ function collectGallerySources(post: {
   return legacy.slice(0, 5);
 }
 
-async function resolveBaseMedia(acf: {
-  imagem?: unknown;
-  anexo?: unknown;
-}): Promise<ResolvedPostMedia> {
-  const [image, attachment] = await Promise.all([
-    resolveImage(acf.imagem),
-    resolveFile(acf.anexo),
-  ]);
-
-  return { image, attachment, gallery: [] };
-}
-
 async function resolveContentMedia(post: {
   atelie_gallery?: unknown;
   acf: {
@@ -253,16 +274,118 @@ async function resolveContentMedia(post: {
   return { image, attachment, gallery };
 }
 
+/**
+ * Resolve slot de vídeo ACF: URL http(s), arquivo, ou ID de mídia.
+ */
+async function resolveVideoSlot(
+  value: unknown,
+): Promise<{ videoUrl: string | null; videoFile: ACFFile | null }> {
+  if (!hasMediaValue(value)) {
+    return { videoUrl: null, videoFile: null };
+  }
+
+  if (typeof value === "string") {
+    const asUrl = safeHttpUrl(value);
+    if (asUrl) return { videoUrl: asUrl, videoFile: null };
+
+    if (/^\d+$/.test(value.trim())) {
+      const file = await resolveFile(Number(value.trim()));
+      return { videoUrl: null, videoFile: file };
+    }
+
+    return { videoUrl: null, videoFile: null };
+  }
+
+  if (typeof value === "number") {
+    const file = await resolveFile(value);
+    return { videoUrl: null, videoFile: file };
+  }
+
+  if (isRecord(value)) {
+    const file = normalizeFile(value);
+    if (file) {
+      const mime = file.mime_type?.toLowerCase() ?? "";
+      if (mime.startsWith("video/") || /\.(mp4|webm|ogg|mov)(\?|$)/i.test(file.url)) {
+        return { videoUrl: null, videoFile: file };
+      }
+      return { videoUrl: file.url, videoFile: null };
+    }
+
+    const url = safeHttpUrl(value.url ?? value.source_url);
+    if (url) return { videoUrl: url, videoFile: null };
+
+    const id = Number(value.ID ?? value.id);
+    if (Number.isInteger(id) && id > 0) {
+      const resolved = await resolveFile(id);
+      return { videoUrl: null, videoFile: resolved };
+    }
+  }
+
+  return { videoUrl: null, videoFile: null };
+}
+
+async function resolvePortfolioMedia(acf: PortfolioACF): Promise<ResolvedPortfolioMedia> {
+  const coverCaption = normalizeEditorialText(acf.ficha_tecnica_capa);
+
+  const imageSlots: Array<{ image: unknown; caption: unknown }> = [
+    { image: acf.imagem_1, caption: acf.ficha_tecnica_imagem_1 },
+    { image: acf.imagem_2, caption: acf.ficha_tecnica_imagem_2 },
+    { image: acf.imagem_3, caption: acf.ficha_tecnica_imagem_3 },
+    { image: acf.imagem_4, caption: acf.ficha_tecnica_imagem_4 },
+    { image: acf.imagem_5, caption: acf.ficha_tecnica_imagem_5 },
+  ];
+
+  const videoSlots: Array<{ video: unknown; caption: unknown }> = [
+    { video: acf.video_1, caption: acf.ficha_tecnica_video_1 },
+    { video: acf.video_2, caption: acf.ficha_tecnica_video_2 },
+    { video: acf.video_3, caption: acf.ficha_tecnica_video_3 },
+    { video: acf.video_4, caption: acf.ficha_tecnica_video_4 },
+    { video: acf.video_5, caption: acf.ficha_tecnica_video_5 },
+  ];
+
+  const [coverImage, resolvedImages, resolvedVideos] = await Promise.all([
+    resolveImage(acf.imagem),
+    Promise.all(
+      imageSlots.map(async (slot): Promise<PortfolioCaptionedImageContent | null> => {
+        if (!hasMediaValue(slot.image)) return null;
+        const image = await resolveImage(slot.image);
+        if (!image) return null;
+        return {
+          image,
+          caption: normalizeEditorialText(slot.caption),
+        };
+      }),
+    ),
+    Promise.all(
+      videoSlots.map(async (slot): Promise<PortfolioCaptionedVideoContent | null> => {
+        if (!hasMediaValue(slot.video)) return null;
+        const resolved = await resolveVideoSlot(slot.video);
+        if (!resolved.videoUrl && !resolved.videoFile) return null;
+        return {
+          videoUrl: resolved.videoUrl,
+          videoFile: resolved.videoFile,
+          caption: normalizeEditorialText(slot.caption),
+        };
+      }),
+    ),
+  ]);
+
+  return {
+    coverImage,
+    coverCaption,
+    images: resolvedImages.filter(
+      (entry): entry is PortfolioCaptionedImageContent => entry !== null,
+    ),
+    videos: resolvedVideos.filter(
+      (entry): entry is PortfolioCaptionedVideoContent => entry !== null,
+    ),
+  };
+}
+
 export async function getProjects(): Promise<ProjectContent[]> {
   const posts = await fetchCollection<ProjectACF>(ENDPOINTS.projects);
   return Promise.all(
-    posts.map(async (post) => {
-      const [media, videoFile] = await Promise.all([
-        resolveContentMedia(post),
-        resolveFile(post.acf.arquivo_video),
-      ]);
-      return mapProject(post, { ...media, videoFile });
-    }),
+    posts.map(async (post) => mapProject(post, await resolvePortfolioMedia(post.acf ?? {}))),
   );
 }
 
@@ -279,40 +402,28 @@ export async function getCourses(): Promise<CourseContent[]> {
 export async function getWorks(): Promise<WorkContent[]> {
   const posts = await fetchCollection<WorkACF>(ENDPOINTS.works);
   return Promise.all(
-    posts.map(async (post) => {
-      const [media, videoFile] = await Promise.all([
-        resolveContentMedia(post),
-        resolveFile(post.acf.arquivo_video),
-      ]);
-      return mapWork(post, media, videoFile);
-    }),
+    posts.map(async (post) => mapWork(post, await resolvePortfolioMedia(post.acf ?? {}))),
   );
 }
 
 export async function getPublications(): Promise<PublicationContent[]> {
   const posts = await fetchCollection<PublicationACF>(ENDPOINTS.publications);
   return Promise.all(
-    posts.map(async (post) => mapPublication(post, await resolveContentMedia(post))),
+    posts.map(async (post) => mapPublication(post, await resolvePortfolioMedia(post.acf ?? {}))),
   );
 }
 
 export async function getExhibitions(): Promise<ExhibitionContent[]> {
   const posts = await fetchCollection<ExhibitionACF>(ENDPOINTS.exhibitions);
   return Promise.all(
-    posts.map(async (post) => mapExhibition(post, await resolveContentMedia(post))),
+    posts.map(async (post) => mapExhibition(post, await resolvePortfolioMedia(post.acf ?? {}))),
   );
 }
 
 export async function getVideos(): Promise<VideoContent[]> {
   const posts = await fetchCollection<VideoACF>(ENDPOINTS.videos);
   return Promise.all(
-    posts.map(async (post) => {
-      const [media, videoFile] = await Promise.all([
-        resolveBaseMedia(post.acf),
-        resolveFile(post.acf.arquivo_video),
-      ]);
-      return mapVideo(post, media, videoFile);
-    }),
+    posts.map(async (post) => mapVideo(post, await resolvePortfolioMedia(post.acf ?? {}))),
   );
 }
 

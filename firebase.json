@@ -5,6 +5,58 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "redirects": [
+      {
+        "source": "/arquivo",
+        "destination": "/portfolio/",
+        "type": 301
+      },
+      {
+        "source": "/arquivo/**",
+        "destination": "/portfolio/",
+        "type": 301
+      },
+      {
+        "source": "/obras",
+        "destination": "/portfolio/",
+        "type": 301
+      },
+      {
+        "source": "/obras/**",
+        "destination": "/portfolio/",
+        "type": 301
+      },
+      {
+        "source": "/exposicoes",
+        "destination": "/portfolio/",
+        "type": 301
+      },
+      {
+        "source": "/exposicoes/**",
+        "destination": "/portfolio/",
+        "type": 301
+      },
+      {
+        "source": "/publicacoes",
+        "destination": "/portfolio/",
+        "type": 301
+      },
+      {
+        "source": "/publicacoes/**",
+        "destination": "/portfolio/",
+        "type": 301
+      },
+      {
+        "source": "/videos",
+        "destination": "/portfolio/",
+        "type": 301
+      },
+      {
+        "source": "/videos/**",
+        "destination": "/portfolio/",
+        "type": 301
+      }
     ]
   }
 }

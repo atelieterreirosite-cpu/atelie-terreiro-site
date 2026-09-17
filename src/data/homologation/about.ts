@@ -85,7 +85,7 @@ export const aboutPageContent: AboutPageView = {
   },
 
   links: [
-    { label: "Portfólio", href: "/arquivo/" },
+    { label: "Portfólio", href: "/portfolio/" },
     { label: "Eventos", href: "/eventos/" },
     { label: "Cursos", href: "/cursos/" },
     { label: "Contato", href: "/contato/" },

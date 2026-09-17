@@ -91,7 +91,9 @@ function mapCourseToMapped(item: CourseContent): MappedCourse {
   };
 }
 
-function stripSortKey({ sortKey: _sortKey, ...view }: MappedCourse): CourseView {
+function stripSortKey(mapped: MappedCourse): CourseView {
+  const { sortKey, ...view } = mapped;
+  void sortKey;
   return view;
 }
 
