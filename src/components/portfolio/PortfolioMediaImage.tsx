@@ -10,7 +10,7 @@ interface PortfolioMediaImageProps {
 
 /**
  * Área de exibição editorial: imagem integral, sem crop/distorção.
- * object-fit: contain via max-width/max-height — nunca cover/fill crop.
+ * Sem fundo cinza — a moldura só limita altura e centraliza.
  */
 export function PortfolioMediaImage({ image, caption }: PortfolioMediaImageProps) {
   const width = image.width && image.width > 0 ? image.width : 1600;
@@ -18,7 +18,7 @@ export function PortfolioMediaImage({ image, caption }: PortfolioMediaImageProps
 
   return (
     <figure className="space-y-3">
-      <div className="portfolio-media-frame flex w-full items-center justify-center overflow-hidden bg-accent/5">
+      <div className="portfolio-media-frame flex w-full items-center justify-center overflow-hidden">
         <Image
           src={image.src}
           alt={image.alt}
@@ -33,7 +33,7 @@ export function PortfolioMediaImage({ image, caption }: PortfolioMediaImageProps
         <figcaption>
           <EditorialText
             text={caption}
-            className="text-sm leading-relaxed text-muted sm:text-base"
+            className="text-center text-xs leading-relaxed text-muted italic sm:text-sm"
           />
         </figcaption>
       ) : null}

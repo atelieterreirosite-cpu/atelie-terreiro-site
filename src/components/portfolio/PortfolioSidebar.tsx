@@ -7,6 +7,9 @@ import type { PortfolioSectionView } from "@/types/views";
 
 interface PortfolioSidebarProps {
   sections: PortfolioSectionView[];
+  open: boolean;
+  onToggle: () => void;
+  panelId: string;
 }
 
 function Chevron({ open }: { open: boolean }) {
@@ -29,11 +32,46 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
+function PanelIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      width="18"
+      height="18"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      {open ? (
+        <path
+          d="M12.5 4.5 7.5 10l5 5.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="square"
+        />
+      ) : (
+        <path
+          d="M7.5 4.5 12.5 10l-5 5.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="square"
+        />
+      )}
+    </svg>
+  );
+}
+
 /**
- * Índice lateral do Portfólio — expandir/recolher por categoria + âncoras.
- * No mobile: painel recolhível no topo do conteúdo.
+ * Índice lateral do Portfólio.
+ * Fica fixo enquanto o conteúdo central rola; rola sozinho se passar da altura da tela.
  */
-export function PortfolioSidebar({ sections }: PortfolioSidebarProps) {
+export function PortfolioSidebar({
+  sections,
+  open,
+  onToggle,
+  panelId,
+}: PortfolioSidebarProps) {
   const baseId = useId();
   const navSections = sections.filter((section) => section.items.length > 0);
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() =>
@@ -51,7 +89,7 @@ export function PortfolioSidebar({ sections }: PortfolioSidebarProps) {
 
       <ul className="space-y-4">
         {navSections.map((section) => {
-          const panelId = `${baseId}-${section.id}`;
+          const sectionPanelId = `${baseId}-${section.id}`;
           const isOpen = expanded[section.id] ?? true;
 
           return (
@@ -67,7 +105,7 @@ export function PortfolioSidebar({ sections }: PortfolioSidebarProps) {
                   type="button"
                   className="touch-target -mr-2 -mt-1 flex items-center justify-center text-muted hover:text-foreground"
                   aria-expanded={isOpen}
-                  aria-controls={panelId}
+                  aria-controls={sectionPanelId}
                   aria-label={
                     isOpen
                       ? `Recolher ${section.label}`
@@ -85,7 +123,7 @@ export function PortfolioSidebar({ sections }: PortfolioSidebarProps) {
               </div>
 
               <ul
-                id={panelId}
+                id={sectionPanelId}
                 className={`mt-2 space-y-1.5 border-l border-border/70 pl-3 ${isOpen ? "" : "hidden"}`}
                 hidden={!isOpen}
               >
@@ -116,22 +154,49 @@ export function PortfolioSidebar({ sections }: PortfolioSidebarProps) {
           className="flex w-full items-center justify-between px-6 py-4 text-left text-xs tracking-[0.15em] text-foreground uppercase md:px-10"
           aria-expanded={mobileOpen}
           aria-controls={`${baseId}-mobile-panel`}
-          onClick={() => setMobileOpen((open) => !open)}
+          onClick={() => setMobileOpen((current) => !current)}
         >
           Índice
           <Chevron open={mobileOpen} />
         </button>
         <div
           id={`${baseId}-mobile-panel`}
-          className={`px-6 pb-6 md:px-10 ${mobileOpen ? "" : "hidden"}`}
+          className={`px-6 pb-6 pt-2 md:px-10 ${mobileOpen ? "" : "hidden"}`}
           hidden={!mobileOpen}
         >
           {nav}
         </div>
       </div>
 
-      <aside className="hidden lg:block lg:w-56 xl:w-64 lg:shrink-0">
-        <div className="sticky top-[calc(var(--header-height)+1.5rem)] max-h-[calc(100vh-var(--header-height)-3rem)] overflow-y-auto pr-2 scrollbar-thin">
+      <aside
+        className={`sticky top-[var(--header-height)] hidden h-[calc(100vh-var(--header-height))] shrink-0 self-start lg:flex lg:flex-col ${
+          open ? "w-60 pl-6 xl:w-72 xl:pl-10" : "w-12 pl-2"
+        }`}
+      >
+        <div
+          className={`flex shrink-0 items-center ${
+            open ? "justify-end pr-1 pt-4" : "justify-center pt-4"
+          }`}
+        >
+          <button
+            type="button"
+            className="touch-target flex items-center justify-center text-muted transition-colors duration-300 hover:text-foreground motion-reduce:transition-none"
+            aria-expanded={open}
+            aria-controls={panelId}
+            aria-label={open ? "Recolher menu lateral" : "Expandir menu lateral"}
+            onClick={onToggle}
+          >
+            <PanelIcon open={open} />
+          </button>
+        </div>
+
+        <div
+          id={panelId}
+          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2 pb-10 pt-3 scrollbar-thin ${
+            open ? "" : "hidden"
+          }`}
+          hidden={!open}
+        >
           {nav}
         </div>
       </aside>

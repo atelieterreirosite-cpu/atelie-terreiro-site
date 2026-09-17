@@ -20,7 +20,7 @@ export function PortfolioMediaVideo({ video, caption }: PortfolioMediaVideoProps
         <figcaption>
           <EditorialText
             text={caption}
-            className="text-sm leading-relaxed text-muted sm:text-base"
+            className="text-center text-xs leading-relaxed text-muted italic sm:text-sm"
           />
         </figcaption>
       ) : null}

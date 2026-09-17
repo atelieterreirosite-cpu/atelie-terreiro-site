@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
@@ -12,6 +13,8 @@ import {
 } from "@/data/navigation";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import type { NavItem } from "@/types/site";
+
+const SITE_MARK_SRC = "/images/logo_Atelie_Terreiro_imagem_COR.png";
 
 type HeaderVariant = "overlay" | "solid";
 
@@ -206,8 +209,8 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
 
   const logoClass =
     isOverlay || menuOpen
-      ? "font-display text-xl font-light tracking-wide text-white transition-opacity duration-300 hover:opacity-80 motion-reduce:transition-none md:text-2xl"
-      : "font-display text-xl font-light tracking-wide text-foreground transition-opacity duration-300 hover:opacity-70 motion-reduce:transition-none md:text-2xl";
+      ? "inline-flex items-center gap-2.5 font-display text-xl font-light tracking-wide text-white transition-opacity duration-300 hover:opacity-80 motion-reduce:transition-none md:gap-3 md:text-2xl"
+      : "inline-flex items-center gap-2.5 font-display text-xl font-light tracking-wide text-foreground transition-opacity duration-300 hover:opacity-70 motion-reduce:transition-none md:gap-3 md:text-2xl";
 
   const menuButtonClass =
     isOverlay || menuOpen
@@ -347,7 +350,17 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
 
       <div className="mx-auto flex h-[var(--header-height)] max-w-7xl items-center justify-between px-6 md:px-10">
         <Link href="/" className={logoClass} onClick={closeMenu}>
-          {siteName}
+          <Image
+            src={SITE_MARK_SRC}
+            alt=""
+            width={2026}
+            height={2636}
+            sizes="40px"
+            className="h-9 w-auto shrink-0 md:h-10"
+            priority
+            aria-hidden
+          />
+          <span>{siteName}</span>
         </Link>
 
         <nav

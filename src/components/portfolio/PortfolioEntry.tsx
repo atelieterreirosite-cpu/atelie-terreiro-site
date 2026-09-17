@@ -8,6 +8,9 @@ interface PortfolioEntryProps {
   item: PortfolioItemView;
 }
 
+const captionClassName =
+  "text-center text-xs leading-relaxed text-muted italic sm:text-sm";
+
 /**
  * Publicação editorial aberta na página:
  * Título → capa (+ ficha) → descrição → imagens → vídeos.
@@ -19,7 +22,7 @@ export function PortfolioEntry({ item }: PortfolioEntryProps) {
       id={item.anchorId}
       className="scroll-mt-[calc(var(--header-height)+1.5rem)] space-y-8 border-t border-border pt-10 md:space-y-10 md:pt-14"
     >
-      <h3 className="font-display text-xl leading-tight font-light tracking-wide text-balance sm:text-2xl md:text-3xl">
+      <h3 className="font-display text-center text-xl leading-tight font-light tracking-wide text-balance sm:text-2xl md:text-3xl">
         {item.title}
       </h3>
 
@@ -28,16 +31,13 @@ export function PortfolioEntry({ item }: PortfolioEntryProps) {
       ) : null}
 
       {!item.coverImage && item.coverCaption ? (
-        <EditorialText
-          text={item.coverCaption}
-          className="text-sm leading-relaxed text-muted sm:text-base"
-        />
+        <EditorialText text={item.coverCaption} className={captionClassName} />
       ) : null}
 
       {item.descriptionText ? (
         <EditorialText
           text={item.descriptionText}
-          className="max-w-3xl text-base leading-relaxed text-foreground/90 md:text-lg"
+          className="mx-auto max-w-3xl text-base leading-relaxed text-foreground/90 md:text-lg"
           as="div"
         />
       ) : null}

@@ -1,3 +1,7 @@
+"use client";
+
+import { useId, useState } from "react";
+
 import type { PortfolioSectionView } from "@/types/views";
 
 import { PortfolioSection } from "./PortfolioSection";
@@ -9,31 +13,41 @@ interface PortfolioPageContentProps {
 }
 
 export function PortfolioPageContent({ sections, errors }: PortfolioPageContentProps) {
+  const panelId = useId();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const hasContent = sections.some((section) => section.items.length > 0);
+  const hasSidebar = hasContent;
 
   return (
-    <div className="mx-auto max-w-7xl lg:flex lg:items-start lg:gap-10 xl:gap-14">
-      <PortfolioSidebar sections={sections} />
+    <div className="w-full lg:flex lg:items-start lg:gap-6 xl:gap-8">
+      {hasSidebar ? (
+        <PortfolioSidebar
+          sections={sections}
+          open={sidebarOpen}
+          onToggle={() => setSidebarOpen((open) => !open)}
+          panelId={panelId}
+        />
+      ) : null}
 
-      <div className="min-w-0 flex-1 px-6 pb-24 md:px-10 md:pb-28 lg:pl-0">
-        <header className="scroll-mt-[calc(var(--header-height)+1.5rem)] py-12 md:py-16 lg:py-20">
-          <h1 className="font-display text-xl leading-tight font-light tracking-wide text-balance sm:text-2xl md:text-3xl lg:text-4xl">
-            Portfólio
-          </h1>
-        </header>
+      <div className="min-w-0 flex-1 px-6 pb-24 md:px-10 md:pb-28 lg:pr-10 lg:pl-0 xl:pr-14">
+        <div className="sr-only">
+          <h1>Portfólio</h1>
+        </div>
 
         {errors.length > 0 ? (
-          <p className="mb-10 text-sm text-muted">
+          <p className="mb-10 pt-12 text-sm text-muted md:pt-16 lg:pt-20">
             Não foi possível carregar parte do portfólio.
           </p>
         ) : null}
 
         {!hasContent && errors.length === 0 ? (
-          <p className="text-sm text-muted">Nenhum conteúdo publicado no momento.</p>
+          <p className="pt-12 text-sm text-muted md:pt-16 lg:pt-20">
+            Nenhum conteúdo publicado no momento.
+          </p>
         ) : null}
 
         {hasContent ? (
-          <div className="space-y-20 md:space-y-28">
+          <div className="space-y-20 pt-12 md:space-y-28 md:pt-16 lg:pt-20">
             {sections.map((section) => (
               <PortfolioSection key={section.id} section={section} />
             ))}
