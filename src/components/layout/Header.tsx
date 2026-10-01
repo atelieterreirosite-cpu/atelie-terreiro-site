@@ -14,7 +14,8 @@ import {
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import type { NavItem } from "@/types/site";
 
-const SITE_MARK_SRC = "/images/logo_Atelie_Terreiro_imagem_COR.png";
+const SITE_ICON_SRC = "/images/logo_Atelie_Terreiro_imagem_COR.png";
+const SITE_NAME_SRC = "/images/nome_atelie.png";
 
 type HeaderVariant = "overlay" | "solid";
 
@@ -209,8 +210,8 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
 
   const logoClass =
     isOverlay || menuOpen
-      ? "inline-flex items-center gap-2.5 font-display text-xl font-light tracking-wide text-white transition-opacity duration-300 hover:opacity-80 motion-reduce:transition-none md:gap-3 md:text-2xl"
-      : "inline-flex items-center gap-2.5 font-display text-xl font-light tracking-wide text-foreground transition-opacity duration-300 hover:opacity-70 motion-reduce:transition-none md:gap-3 md:text-2xl";
+      ? "inline-flex items-center gap-2.5 transition-opacity duration-300 hover:opacity-80 motion-reduce:transition-none md:gap-3"
+      : "inline-flex items-center gap-2.5 transition-opacity duration-300 hover:opacity-70 motion-reduce:transition-none md:gap-3";
 
   const menuButtonClass =
     isOverlay || menuOpen
@@ -351,7 +352,7 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
       <div className="mx-auto flex h-[var(--header-height)] max-w-7xl items-center justify-between px-6 md:px-10">
         <Link href="/" className={logoClass} onClick={closeMenu}>
           <Image
-            src={SITE_MARK_SRC}
+            src={SITE_ICON_SRC}
             alt=""
             width={2026}
             height={2636}
@@ -360,7 +361,17 @@ export function Header({ variant = "solid", siteName }: HeaderProps) {
             priority
             aria-hidden
           />
-          <span>{siteName}</span>
+          <Image
+            src={SITE_NAME_SRC}
+            alt={siteName || "Ateliê Terreiro"}
+            width={894}
+            height={90}
+            sizes="(max-width: 768px) 160px, 200px"
+            className={`h-5 w-auto shrink-0 md:h-6 ${
+              isOverlay || menuOpen ? "brightness-0 invert" : ""
+            }`}
+            priority
+          />
         </Link>
 
         <nav

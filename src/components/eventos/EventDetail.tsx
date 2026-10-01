@@ -72,7 +72,7 @@ export function EventDetail({ event }: EventDetailProps) {
             href={event.featuredImage.src}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex max-h-[min(70vh,720px)] max-w-full items-center justify-center"
+            className="group inline-flex max-h-[min(80vh,800px)] max-w-full items-center justify-center"
             aria-label={`Abrir imagem: ${event.featuredImage.alt}`}
           >
             <Image
@@ -82,7 +82,7 @@ export function EventDetail({ event }: EventDetailProps) {
               height={event.featuredImage.height ?? 1200}
               priority
               sizes="(max-width: 896px) 100vw, 896px"
-              className="h-auto max-h-[min(70vh,720px)] w-auto max-w-full object-contain transition-opacity duration-500 motion-reduce:transition-none group-hover:opacity-90"
+              className="h-auto max-h-[min(80vh,800px)] w-auto max-w-full object-contain transition-opacity duration-500 motion-reduce:transition-none group-hover:opacity-90"
             />
           </a>
         </div>
@@ -140,7 +140,11 @@ export function EventDetail({ event }: EventDetailProps) {
 
       {event.gallery.length > 0 ? (
         <div className="mx-auto mt-16 max-w-4xl px-6 md:mt-20 md:px-10">
-          <ContentGallery images={event.gallery} label={`Galeria — ${event.title}`} />
+          <ContentGallery
+            images={event.gallery}
+            label={`Galeria — ${event.title}`}
+            layout="stack"
+          />
         </div>
       ) : null}
     </article>

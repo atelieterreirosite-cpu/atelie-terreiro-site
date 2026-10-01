@@ -1,10 +1,7 @@
-"use client";
-
 import Image from "next/image";
-import { useState } from "react";
 
-import { MediaLightbox } from "@/components/ui/MediaLightbox";
 import { MediaPlaceholder } from "@/components/ui/MediaPlaceholder";
+import { editorialFrameAlignClass } from "@/lib/media/editorialFrame";
 import type { GuideView } from "@/types/views";
 
 interface TeamNetworkProps {
@@ -14,17 +11,63 @@ interface TeamNetworkProps {
   members: GuideView[];
 }
 
-export function TeamNetwork({ kicker, title, text, members }: TeamNetworkProps) {
-  const [activeSlug, setActiveSlug] = useState<string | null>(null);
+function NetworkMemberRow({ member, index }: { member: GuideView; index: number }) {
+  const imageOnRight = index % 2 === 1;
+  const imageSrc = member.image?.src?.trim();
+  const imageAlt = member.image?.alt?.trim() || member.name;
+  const description = member.description?.trim();
+  const imageWidth = member.image?.width && member.image.width > 0 ? member.image.width : 800;
+  const imageHeight =
+    member.image?.height && member.image.height > 0 ? member.image.height : 1000;
+  const frameAlign = editorialFrameAlignClass(member.image?.width, member.image?.height);
 
+  return (
+    <article className="grid items-start gap-6 border-t border-border pt-12 md:gap-8 md:pt-16 lg:grid-cols-12 lg:gap-x-8 xl:gap-x-12">
+      <figure
+        className={`min-w-0 lg:col-span-6 ${
+          imageOnRight ? "lg:col-start-7" : "lg:col-start-1"
+        }`}
+      >
+        <div
+          className={`flex h-[min(70vh,36rem)] min-h-[18rem] w-full overflow-hidden sm:min-h-[20rem] md:h-[min(75vh,40rem)] ${frameAlign}`}
+        >
+          {imageSrc && member.image ? (
+            <Image
+              src={imageSrc}
+              alt={imageAlt}
+              width={imageWidth}
+              height={imageHeight}
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="h-auto max-h-full w-auto max-w-full object-contain"
+            />
+          ) : (
+            <MediaPlaceholder label={member.name} className="h-full min-h-full w-full" />
+          )}
+        </div>
+      </figure>
+
+      <div
+        className={`min-w-0 space-y-4 lg:col-span-5 ${
+          imageOnRight ? "lg:col-start-1 lg:row-start-1" : "lg:col-start-8"
+        } lg:pt-2 xl:pt-4`}
+      >
+        <h3 className="font-display text-xl leading-snug font-light tracking-wide text-foreground sm:text-2xl md:text-3xl">
+          {member.name}
+        </h3>
+        {description ? (
+          <p className="max-w-prose text-base leading-relaxed text-muted md:text-lg">
+            {description}
+          </p>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+export function TeamNetwork({ kicker, title, text, members }: TeamNetworkProps) {
   if (members.length === 0) {
     return null;
   }
-
-  const activeMember =
-    activeSlug === null
-      ? null
-      : members.find((member) => (member.slug || String(member.id)) === activeSlug) ?? null;
 
   return (
     <section
@@ -32,7 +75,7 @@ export function TeamNetwork({ kicker, title, text, members }: TeamNetworkProps) 
       className="border-t border-border pb-20 md:pb-28"
     >
       <div className="mx-auto max-w-7xl px-6 pt-16 md:px-10 md:pt-24 lg:pt-28">
-        <div className="max-w-xl space-y-5">
+        <div className="max-w-2xl space-y-5 md:space-y-6">
           <p className="text-xs tracking-[0.15em] text-muted-light uppercase">{kicker}</p>
           <h2
             id="equipe-rede-title"
@@ -40,61 +83,19 @@ export function TeamNetwork({ kicker, title, text, members }: TeamNetworkProps) 
           >
             {title}
           </h2>
-          <p className="max-w-md text-base leading-relaxed text-muted md:text-lg">{text}</p>
+          <p className="max-w-xl text-base leading-relaxed text-muted md:text-lg">{text}</p>
         </div>
 
-        <ul className="mt-12 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 md:mt-16 md:gap-x-8 md:gap-y-12 lg:grid-cols-4 xl:grid-cols-5">
-          {members.map((member) => {
-            const memberKey = member.slug || String(member.id);
-            const imageSrc = member.image?.src?.trim();
-            const imageAlt = member.image?.alt?.trim() || member.name;
-            const canOpen = Boolean(imageSrc);
-
-            return (
-              <li key={memberKey}>
-                <figure className="space-y-3">
-                  {canOpen && member.image ? (
-                    <button
-                      type="button"
-                      onClick={() => setActiveSlug(memberKey)}
-                      className="group relative aspect-[3/4] w-full overflow-hidden bg-accent/5 text-left focus-visible:outline-offset-4"
-                      aria-label={`Ver detalhes de ${member.name}`}
-                    >
-                      <Image
-                        src={imageSrc!}
-                        alt={imageAlt}
-                        fill
-                        sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
-                        className="object-cover transition-opacity duration-500 motion-reduce:transition-none group-hover:opacity-90"
-                      />
-                    </button>
-                  ) : (
-                    <div className="relative aspect-[3/4] overflow-hidden bg-accent/5">
-                      <MediaPlaceholder
-                        label={member.name}
-                        className="absolute inset-0 aspect-auto h-full min-h-full"
-                      />
-                    </div>
-                  )}
-                  <figcaption className="font-display text-base leading-snug font-light tracking-wide text-foreground/90 sm:text-lg">
-                    {member.name}
-                  </figcaption>
-                </figure>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="mt-14 space-y-0 md:mt-20">
+          {members.map((member, index) => (
+            <NetworkMemberRow
+              key={member.slug || String(member.id)}
+              member={member}
+              index={index}
+            />
+          ))}
+        </div>
       </div>
-
-      {activeMember?.image ? (
-        <MediaLightbox
-          open
-          image={activeMember.image}
-          title={activeMember.name}
-          description={activeMember.description}
-          onClose={() => setActiveSlug(null)}
-        />
-      ) : null}
     </section>
   );
 }

@@ -24,7 +24,7 @@ export function EventCard({ event }: EventCardProps) {
         href={`/eventos/${event.slug}/`}
         className={
           hasImage
-            ? "grid gap-5 sm:gap-6 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:items-start md:gap-10"
+            ? "grid gap-5 sm:gap-6 md:grid-cols-[minmax(0,360px)_minmax(0,1fr)] md:items-start md:gap-10"
             : "grid gap-5 sm:gap-6"
         }
       >
@@ -40,14 +40,14 @@ export function EventCard({ event }: EventCardProps) {
         </div>
 
         {event.featuredImage ? (
-          <div className="flex max-h-[min(45vh,320px)] max-w-full items-center justify-center md:max-h-[260px] md:self-start">
+          <div className="flex max-h-[min(55vh,440px)] max-w-full items-center justify-center md:max-h-[min(45vh,400px)] md:self-start">
             <Image
               src={event.featuredImage.src}
               alt={event.featuredImage.alt}
               width={event.featuredImage.width ?? 1600}
               height={event.featuredImage.height ?? 1200}
-              sizes="(max-width: 768px) 100vw, 280px"
-              className="h-auto max-h-[min(45vh,320px)] w-auto max-w-full object-contain transition-opacity duration-500 motion-reduce:transition-none group-hover:opacity-90 md:max-h-[260px]"
+              sizes="(max-width: 768px) 100vw, 360px"
+              className="h-auto max-h-[min(55vh,440px)] w-auto max-w-full object-contain transition-opacity duration-500 motion-reduce:transition-none group-hover:opacity-90 md:max-h-[min(45vh,400px)]"
             />
           </div>
         ) : null}

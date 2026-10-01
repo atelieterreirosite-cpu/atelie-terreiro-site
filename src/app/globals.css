@@ -206,6 +206,23 @@
       min-height: 12rem;
     }
   }
+
+  /**
+   * Moldura editorial de conteúdo (Sobre, Cursos, etc.):
+   * área maior que o Portfólio; imagem integral via object-contain.
+   */
+  .editorial-media-frame {
+    width: 100%;
+    height: min(75vh, 40rem);
+    min-height: 16rem;
+  }
+
+  @media (max-width: 767px) {
+    .editorial-media-frame {
+      height: min(60vh, 32rem);
+      min-height: 14rem;
+    }
+  }
 }
 
 @keyframes page-fade-in {

@@ -44,18 +44,32 @@ function eventModality(item: EventContent): EventModality {
   return item.details.online ? "online" : "presencial";
 }
 
-function eventStatus(item: EventContent, sortKey: string): EventStatus {
-  const today = todaySortKey();
-  const endKey = dateSortKey(item.details.endDate);
+/**
+ * Status temporal do evento (regra aprovada):
+ * - futuro: início > hoje
+ * - em-andamento: início ≤ hoje ≤ fim
+ * - encerrado: fim < hoje
+ *
+ * Sem `data_fim`, usa a data de início resolvida como fim (evento de um dia).
+ * Sem início válido (nem fallback `post.date`), retorna `encerrado`.
+ *
+ * `today` opcional permite verificação determinística (YYYY-MM-DD).
+ */
+export function resolveEventStatus(
+  item: Pick<EventContent, "date" | "details">,
+  today: string = todaySortKey(),
+): EventStatus {
   const startKey = dateSortKey(item.details.startDate, item.date);
-
-  if (item.details.endDate && endKey < today) return "encerrado";
-  if (item.details.startDate && startKey > today) return "futuro";
-  if (sortKey !== "0000-00-00" && sortKey <= today) {
-    if (!item.details.endDate || endKey >= today) return "em-andamento";
+  if (startKey === "0000-00-00") {
+    return "encerrado";
   }
+
+  const endFromCms = item.details.endDate ? dateSortKey(item.details.endDate) : "0000-00-00";
+  const endKey = endFromCms !== "0000-00-00" ? endFromCms : startKey;
+
   if (startKey > today) return "futuro";
-  return "encerrado";
+  if (endKey < today) return "encerrado";
+  return "em-andamento";
 }
 
 function mapRegistration(item: EventContent, status: EventStatus): EventView["registration"] {
@@ -79,8 +93,8 @@ function mapRegistration(item: EventContent, status: EventStatus): EventView["re
 }
 
 function mapEventToMapped(item: EventContent): MappedEvent {
-  const sortKey = dateSortKey(item.details.startDate, item.details.endDate || item.date);
-  const status = eventStatus(item, sortKey);
+  const sortKey = dateSortKey(item.details.startDate, item.date);
+  const status = resolveEventStatus(item);
 
   return {
     slug: item.slug,

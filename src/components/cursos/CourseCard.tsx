@@ -34,13 +34,22 @@ export function CourseCard({ course }: CourseCardProps) {
 
         <div className="space-y-4">
           {course.featuredImage ? (
-            <div className="relative aspect-[16/9] overflow-hidden bg-accent/5 md:hidden">
+            <div className="flex max-h-[min(50vh,360px)] w-full items-center justify-center overflow-hidden md:hidden">
               <Image
                 src={course.featuredImage.src}
                 alt={course.featuredImage.alt}
-                fill
+                width={
+                  course.featuredImage.width && course.featuredImage.width > 0
+                    ? course.featuredImage.width
+                    : 1600
+                }
+                height={
+                  course.featuredImage.height && course.featuredImage.height > 0
+                    ? course.featuredImage.height
+                    : 1200
+                }
                 sizes="100vw"
-                className="object-cover transition-transform duration-700 motion-reduce:transition-none max-md:group-active:scale-[1.01] md:group-hover:scale-[1.02]"
+                className="h-auto max-h-[min(50vh,360px)] w-auto max-w-full object-contain transition-opacity duration-500 motion-reduce:transition-none group-hover:opacity-90"
               />
             </div>
           ) : null}

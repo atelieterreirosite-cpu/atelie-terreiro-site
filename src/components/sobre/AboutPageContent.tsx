@@ -46,7 +46,7 @@ export function AboutPageContentView({ content }: AboutPageContentProps) {
       </div>
 
       {content.territory ? (
-        <div className="mx-auto max-w-6xl overflow-x-hidden px-6 py-4 sm:py-8 md:px-10 md:py-12">
+        <div className="mx-auto max-w-5xl overflow-x-hidden px-6 py-4 sm:py-8 md:px-8 md:py-12 lg:px-10">
           <TerritorySection section={content.territory} />
         </div>
       ) : null}

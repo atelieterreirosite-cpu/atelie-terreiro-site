@@ -75,14 +75,23 @@ export function CourseDetail({ course }: CourseDetailProps) {
 
       {course.featuredImage ? (
         <div className="mx-auto mt-12 max-w-4xl px-6 md:px-10">
-          <div className="relative aspect-[16/9] overflow-hidden bg-accent/5">
+          <div className="editorial-media-frame flex w-full items-center justify-center overflow-hidden">
             <Image
               src={course.featuredImage.src}
               alt={course.featuredImage.alt}
-              fill
+              width={
+                course.featuredImage.width && course.featuredImage.width > 0
+                  ? course.featuredImage.width
+                  : 1600
+              }
+              height={
+                course.featuredImage.height && course.featuredImage.height > 0
+                  ? course.featuredImage.height
+                  : 1200
+              }
               priority
               sizes="(max-width: 896px) 100vw, 896px"
-              className="object-cover"
+              className="h-auto max-h-full w-auto max-w-full object-contain"
             />
           </div>
         </div>
@@ -122,7 +131,11 @@ export function CourseDetail({ course }: CourseDetailProps) {
 
       {course.gallery.length > 0 ? (
         <div className="mx-auto mt-16 max-w-4xl px-6 md:mt-20 md:px-10">
-          <ContentGallery images={course.gallery} label={`Galeria — ${course.title}`} />
+          <ContentGallery
+            images={course.gallery}
+            label={`Galeria — ${course.title}`}
+            layout="stack"
+          />
         </div>
       ) : null}
     </article>

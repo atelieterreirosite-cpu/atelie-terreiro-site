@@ -16,6 +16,7 @@ interface YtPlayer {
   pauseVideo: () => void;
   mute: () => void;
   unMute: () => void;
+  setVolume: (volume: number) => void;
   isMuted: () => boolean;
   getPlayerState: () => number;
   destroy: () => void;
@@ -203,6 +204,7 @@ export function YouTubeBackgroundPlayer({
 
       if (isMuted) {
         player.unMute();
+        player.setVolume(100);
         setIsMuted(false);
       } else {
         player.mute();

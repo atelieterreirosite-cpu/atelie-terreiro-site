@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import { VimeoBackgroundPlayer } from "@/components/ui/VimeoBackgroundPlayer";
 import { YouTubeBackgroundPlayer } from "@/components/ui/YouTubeBackgroundPlayer";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -10,9 +8,6 @@ import type { HomeVideo } from "@/types/views";
 interface HomeHeroProps {
   video?: HomeVideo;
 }
-
-/** Faixa rolável extra abaixo do vídeo em telas mais largas que 16:9 */
-const SCROLL_BUFFER_VH = 22;
 
 function buildWatchUrl(video: HomeVideo): string | null {
   if (video.provider === "youtube" && video.videoId) {
@@ -32,22 +27,6 @@ function buildWatchUrl(video: HomeVideo): string | null {
   }
 
   return video.url ?? null;
-}
-
-function useWideViewport(): boolean {
-  const [isWide, setIsWide] = useState(false);
-
-  useEffect(() => {
-    const media = window.matchMedia("(min-aspect-ratio: 16/9)");
-
-    const update = () => setIsWide(media.matches);
-    update();
-
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-
-  return isWide;
 }
 
 function ReducedMotionFallback({ video }: { video: HomeVideo }) {
@@ -75,15 +54,15 @@ function ReducedMotionFallback({ video }: { video: HomeVideo }) {
   );
 }
 
-function HomeVideoLayer({ video, fit }: { video: HomeVideo; fit: "fill" | "width" }) {
+function HomeVideoLayer({ video }: { video: HomeVideo }) {
   if (video.provider === "youtube" && video.videoId) {
-    return <YouTubeBackgroundPlayer video={video} fit={fit} />;
+    return <YouTubeBackgroundPlayer video={video} fit="fill" />;
   }
 
   if (video.provider === "file" && video.url) {
     return (
       <video
-        className={`absolute inset-0 h-full w-full object-cover ${fit === "width" ? "h-[56.25vw]" : ""}`}
+        className="absolute inset-0 h-full w-full object-cover"
         src={video.url}
         autoPlay
         muted
@@ -95,7 +74,7 @@ function HomeVideoLayer({ video, fit }: { video: HomeVideo; fit: "fill" | "width
   }
 
   if (video.provider === "vimeo" && video.videoId) {
-    return <VimeoBackgroundPlayer video={video} fit={fit} />;
+    return <VimeoBackgroundPlayer video={video} fit="fill" />;
   }
 
   return (
@@ -107,33 +86,29 @@ function HomeVideoLayer({ video, fit }: { video: HomeVideo; fit: "fill" | "width
   );
 }
 
+/**
+ * Altura da seção = max(100dvh, 56.25vw):
+ * - viewport mais alto que 16:9 → preenche a tela (vídeo em cover, laterais podem ser cortadas)
+ * - viewport mais largo que 16:9 → seção acompanha a altura 16:9 do vídeo; a página rola para ver o excedente
+ */
 export function HomeHero({ video }: HomeHeroProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const isWide = useWideViewport();
-  const scrollableHeight = `max(100dvh, calc(56.25vw + ${SCROLL_BUFFER_VH}vh))`;
   const label = video?.title || "Início";
-
-  // Em viewports mais estreitos/altos (celular, iPad), a largura manda:
-  // vídeo 16:9 em 100% da largura, sem crop por altura fixa (100dvh + cover).
-  // Em desktop largo (aspect ≥ 16/9), mantém a composição atual com buffer rolável.
-  const sectionClassName = isWide
-    ? "relative w-full bg-black"
-    : "relative aspect-video w-full bg-black";
 
   return (
     <section
       id="conteudo-principal"
-      className={sectionClassName}
-      style={isWide ? { minHeight: scrollableHeight } : undefined}
+      className="relative w-full bg-black"
+      style={{ height: "max(100dvh, 56.25vw)" }}
       aria-label={label}
     >
       {video && prefersReducedMotion ? (
         <ReducedMotionFallback video={video} />
       ) : video ? (
         <>
-          <HomeVideoLayer video={video} fit="width" />
+          <HomeVideoLayer video={video} />
           <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-[56.25vw] bg-gradient-to-t from-black/30 via-transparent to-black/20"
+            className="pointer-events-none absolute inset-0 z-[5] bg-gradient-to-t from-black/30 via-transparent to-black/20"
             aria-hidden="true"
           />
         </>

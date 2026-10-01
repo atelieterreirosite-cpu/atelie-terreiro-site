@@ -4,20 +4,11 @@ import type { NavItem } from "@/types/site";
  * Navegação principal — temporária até menu WP / Options (v1: código).
  * Hrefs com trailing slash para compatibilidade com `output: "export"`.
  *
- * Portfólio aponta para `/portfolio/`. Subitens usam hash das seções.
- * Ordem DEFINITIVA: Obras → Projetos → Exposições → Publicações → Vídeos.
+ * Portfólio é link simples para `/portfolio/` (índice interno fica na página).
  */
-export const portfolioNavigation: NavItem[] = [
-  { label: "Obras", href: "/portfolio/#obras" },
-  { label: "Projetos", href: "/portfolio/#projetos" },
-  { label: "Exposições", href: "/portfolio/#exposicoes" },
-  { label: "Publicações", href: "/portfolio/#publicacoes" },
-  { label: "Vídeos", href: "/portfolio/#videos" },
-];
-
 export const mainNavigation: NavItem[] = [
   { label: "Sobre", href: "/sobre/" },
-  { label: "Portfólio", href: "/portfolio/", children: portfolioNavigation },
+  { label: "Portfólio", href: "/portfolio/" },
   { label: "Eventos", href: "/eventos/" },
   { label: "Cursos", href: "/cursos/" },
   { label: "Equipe", href: "/equipe/" },
