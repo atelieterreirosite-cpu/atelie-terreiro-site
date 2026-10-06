@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from "react";
 
 import type { HomeVideo } from "@/types/views";
 
@@ -32,7 +40,7 @@ declare global {
   interface Window {
     YT?: {
       Player: new (
-        elementId: string,
+        elementId: string | HTMLElement,
         options: {
           videoId: string;
           width?: string | number;
@@ -99,37 +107,125 @@ function coverClass(fit: "fill" | "width"): string {
   return "absolute top-1/2 left-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2";
 }
 
-export function YouTubeBackgroundPlayer({
-  video,
-  fit = "fill",
-  className = "",
-}: YouTubeBackgroundPlayerProps) {
-  const reactId = useId().replace(/:/g, "");
-  const containerId = `yt-bg-${reactId}`;
-  const playerRef = useRef<YtPlayer | null>(null);
+function unloadCaptions(player: YtPlayer) {
+  try {
+    player.unloadModule?.("captions");
+    player.unloadModule?.("cc");
+  } catch {
+    // API pode variar conforme o vídeo
+  }
+}
 
-  const [isMuted, setIsMuted] = useState(true);
-  const [ready, setReady] = useState(false);
-  const [failed, setFailed] = useState(false);
+function readIsMuted(player: YtPlayer): boolean {
+  try {
+    return Boolean(player.isMuted());
+  } catch {
+    return true;
+  }
+}
+
+type PlayerStatus = { ready: true; muted: boolean } | { ready: false } | { failed: true };
+
+interface YouTubeHostProps {
+  videoId: string;
+  startSeconds?: number;
+  playerRef: MutableRefObject<YtPlayer | null>;
+  readyRef: MutableRefObject<boolean>;
+  onStatus: (status: PlayerStatus) => void;
+}
+
+/**
+ * Isolado com memo estável para o React não reconciliar/limpar o iframe
+ * injetado pela YouTube IFrame API quando o botão de volume atualiza estado.
+ */
+const YouTubeHost = memo(function YouTubeHost({
+  videoId,
+  startSeconds,
+  playerRef,
+  readyRef,
+  onStatus,
+}: YouTubeHostProps) {
+  const reactId = useId().replace(/:/g, "");
+  const hostRef = useRef<HTMLDivElement>(null);
+  const onStatusRef = useRef(onStatus);
 
   useEffect(() => {
-    if (!video.videoId) return;
+    onStatusRef.current = onStatus;
+  }, [onStatus]);
 
+  useEffect(() => {
+    const hostRoot = hostRef.current;
     let cancelled = false;
+    let hostElement: HTMLDivElement | null = null;
+    let settleTimer: number | undefined;
+    let markedReady = false;
+
+    const emitReady = (player: YtPlayer, muted: boolean) => {
+      if (cancelled || markedReady) return;
+      markedReady = true;
+      readyRef.current = true;
+      playerRef.current = player;
+      onStatusRef.current({ ready: true, muted });
+    };
+
+    const startMutedFallback = (player: YtPlayer) => {
+      try {
+        player.mute();
+        player.playVideo();
+      } catch {
+        // ignore
+      }
+      emitReady(player, true);
+    };
+
+    const settlePlayback = (player: YtPlayer) => {
+      if (cancelled || markedReady || !window.YT) return;
+
+      const { PlayerState } = window.YT;
+      let state = -1;
+      try {
+        state = player.getPlayerState();
+      } catch {
+        startMutedFallback(player);
+        return;
+      }
+
+      const isActive =
+        state === PlayerState.PLAYING || state === PlayerState.BUFFERING;
+      const muted = readIsMuted(player);
+
+      if (!isActive) {
+        startMutedFallback(player);
+        return;
+      }
+
+      // Reproduzindo: se ainda estiver mudo (política do navegador), mantém mudo.
+      emitReady(player, muted);
+    };
 
     const init = async () => {
       await loadYouTubeApi();
-      if (cancelled || !window.YT?.Player) return;
+      if (cancelled || !window.YT?.Player || !hostRoot) return;
 
       playerRef.current?.destroy();
+      playerRef.current = null;
+      readyRef.current = false;
+      markedReady = false;
+      onStatusRef.current({ ready: false });
 
-      playerRef.current = new window.YT.Player(containerId, {
-        videoId: video.videoId!,
+      hostElement = document.createElement("div");
+      hostElement.id = `yt-bg-${reactId}`;
+      hostElement.className = "h-full w-full";
+      hostRoot.replaceChildren(hostElement);
+
+      playerRef.current = new window.YT.Player(hostElement, {
+        videoId,
         width: "100%",
         height: "100%",
         playerVars: {
           autoplay: 1,
-          mute: 1,
+          // Tenta autoplay com áudio; fallback para mudo se o navegador bloquear.
+          mute: 0,
           controls: 0,
           disablekb: 1,
           fs: 0,
@@ -140,30 +236,36 @@ export function YouTubeBackgroundPlayer({
           rel: 0,
           showinfo: 0,
           loop: 1,
-          playlist: video.videoId!,
-          start: video.startSeconds ?? 0,
+          playlist: videoId,
+          start: startSeconds ?? 0,
           enablejsapi: 1,
           origin: window.location.origin,
         },
         events: {
           onReady: (event) => {
             if (cancelled) return;
+
+            const player = event.target;
+            playerRef.current = player;
+            unloadCaptions(player);
+
             try {
-              event.target.unloadModule?.("captions");
-              event.target.unloadModule?.("cc");
+              player.unMute();
+              player.setVolume(100);
+              player.playVideo();
             } catch {
-              // API pode variar conforme o vídeo
+              startMutedFallback(player);
+              return;
             }
-            event.target.mute();
-            event.target.playVideo();
-            setIsMuted(true);
-            setReady(true);
+
+            // Garante que o botão nunca fique permanente disabled/ready=false.
+            settleTimer = window.setTimeout(() => settlePlayback(player), 500);
           },
           onStateChange: (event) => {
             if (cancelled || !window.YT) return;
 
             const { PlayerState } = window.YT;
-            // Mantém loop e evita UI nativa de pausa (título/canal/controles).
+
             if (
               event.data === PlayerState.ENDED ||
               event.data === PlayerState.PAUSED
@@ -171,17 +273,24 @@ export function YouTubeBackgroundPlayer({
               event.target.playVideo();
               return;
             }
+
             if (event.data === PlayerState.PLAYING) {
-              try {
-                event.target.unloadModule?.("captions");
-                event.target.unloadModule?.("cc");
-              } catch {
-                // ignore
+              unloadCaptions(event.target);
+
+              if (!markedReady) {
+                // Se já está tocando com áudio, libera o botão sem esperar o timer.
+                if (!readIsMuted(event.target)) {
+                  if (settleTimer !== undefined) {
+                    window.clearTimeout(settleTimer);
+                    settleTimer = undefined;
+                  }
+                  emitReady(event.target, false);
+                }
               }
             }
           },
           onError: () => {
-            if (!cancelled) setFailed(true);
+            if (!cancelled) onStatusRef.current({ failed: true });
           },
         },
       });
@@ -191,28 +300,122 @@ export function YouTubeBackgroundPlayer({
 
     return () => {
       cancelled = true;
+      if (settleTimer !== undefined) {
+        window.clearTimeout(settleTimer);
+      }
+      readyRef.current = false;
       playerRef.current?.destroy();
       playerRef.current = null;
+      hostElement?.remove();
+      hostRoot?.replaceChildren();
     };
-  }, [containerId, video.startSeconds, video.videoId]);
+  }, [playerRef, readyRef, reactId, startSeconds, videoId]);
 
-  const toggleMute = useCallback(
-    (event: React.MouseEvent) => {
-      event.stopPropagation();
-      const player = playerRef.current;
-      if (!player || !ready) return;
+  return <div ref={hostRef} className="h-full w-full" />;
+});
 
-      if (isMuted) {
+function VolumeIcon({ muted }: { muted: boolean }) {
+  if (muted) {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 10v4h3l4 3V7L7 10H4z" fill="currentColor" />
+        <path
+          d="M16 9.5l4 4m0-4l-4 4"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 10v4h3l4 3V7L7 10H4z" fill="currentColor" />
+      <path
+        d="M15.5 8.5a4.5 4.5 0 010 7M17.5 6.5a7.5 7.5 0 010 11"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function YouTubeBackgroundPlayer({
+  video,
+  fit = "fill",
+  className = "",
+}: YouTubeBackgroundPlayerProps) {
+  const playerRef = useRef<YtPlayer | null>(null);
+  const readyRef = useRef(false);
+  const isMutedRef = useRef(true);
+
+  const [isMuted, setIsMuted] = useState(true);
+  const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  const handleStatus = useCallback((status: PlayerStatus) => {
+    if ("failed" in status) {
+      setFailed(true);
+      setReady(false);
+      readyRef.current = false;
+      return;
+    }
+
+    if (!status.ready) {
+      setReady(false);
+      isMutedRef.current = true;
+      setIsMuted(true);
+      return;
+    }
+
+    isMutedRef.current = status.muted;
+    setIsMuted(status.muted);
+    setReady(true);
+  }, []);
+
+  const toggleMute = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Diagnóstico do fluxo de clique → player (mantido mínimo e útil).
+    console.log("[VideoAudio] volume button clicked");
+
+    const player = playerRef.current;
+    console.log("[VideoAudio] current isMuted:", isMutedRef.current, {
+      hasPlayer: Boolean(player),
+      ready: readyRef.current,
+    });
+
+    if (!player) {
+      console.log("[VideoAudio] player instance missing");
+      return;
+    }
+
+    try {
+      const currentlyMuted = readIsMuted(player);
+      console.log("[VideoAudio] player.isMuted():", currentlyMuted);
+
+      if (currentlyMuted) {
+        console.log("[VideoAudio] trying to unmute");
         player.unMute();
         player.setVolume(100);
+        player.playVideo();
+        console.log("[VideoAudio] unMute + setVolume(100) executed");
+        // Ícone: não confiar em isMuted() imediato (atrasa na API do YT).
+        isMutedRef.current = false;
         setIsMuted(false);
       } else {
+        console.log("[VideoAudio] calling mute()");
         player.mute();
+        isMutedRef.current = true;
         setIsMuted(true);
       }
-    },
-    [isMuted, ready],
-  );
+    } catch (error) {
+      console.log("[VideoAudio] toggle failed:", error);
+    }
+  }, []);
 
   if (!video.videoId || failed) {
     return (
@@ -224,55 +427,49 @@ export function YouTubeBackgroundPlayer({
     );
   }
 
+  const buttonPositionClass =
+    fit === "width" ? "absolute right-5 sm:right-8" : "fixed right-5 sm:right-8";
+  const buttonStyle =
+    fit === "width"
+      ? { top: "calc(56.25vw - 3.25rem)" }
+      : { bottom: "max(1.25rem, env(safe-area-inset-bottom))" };
+
   return (
-    <div className={`absolute inset-0 overflow-hidden bg-black ${className}`}>
-      <div
-        className={`pointer-events-none ${coverClass(fit)} [&_iframe]:pointer-events-none [&_iframe]:absolute [&_iframe]:inset-0 [&_iframe]:h-full [&_iframe]:w-full [&_iframe]:border-0`}
-        aria-hidden="true"
-      >
-        <div id={containerId} className="h-full w-full" />
+    <div className={`absolute inset-0 bg-black ${className}`}>
+      {/* Camada de mídia isolada: overflow/blocker não podem cobrir o botão. */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div
+          className={`pointer-events-none ${coverClass(fit)} [&_iframe]:pointer-events-none [&_iframe]:absolute [&_iframe]:inset-0 [&_iframe]:h-full [&_iframe]:w-full [&_iframe]:border-0`}
+          aria-hidden="true"
+        >
+          <YouTubeHost
+            videoId={video.videoId}
+            startSeconds={video.startSeconds}
+            playerRef={playerRef}
+            readyRef={readyRef}
+            onStatus={handleStatus}
+          />
+        </div>
+
+        {/* Bloqueia hover/clique no iframe para não disparar UI nativa do YouTube. */}
+        <div className="absolute inset-0 z-10" aria-hidden="true" />
       </div>
 
-      {/* Bloqueia hover/clique no iframe para não disparar UI nativa do YouTube. */}
-      <div className="absolute inset-0 z-10" aria-hidden="true" />
-
-      <button
-        type="button"
-        onClick={toggleMute}
-        className={`touch-target z-40 flex items-center justify-center text-white/85 transition-opacity duration-300 hover:text-white ${
-          fit === "width"
-            ? "absolute right-5 sm:right-8"
-            : "fixed right-5 sm:right-8"
-        }`}
-        style={
-          fit === "width"
-            ? { top: "calc(56.25vw - 3.25rem)" }
-            : { bottom: "max(1.25rem, env(safe-area-inset-bottom))" }
-        }
-        aria-label={isMuted ? "Ativar som" : "Silenciar"}
-      >
-        {isMuted ? (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 10v4h3l4 3V7L7 10H4z" fill="currentColor" />
-            <path
-              d="M16 9.5l4 4m0-4l-4 4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-        ) : (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 10v4h3l4 3V7L7 10H4z" fill="currentColor" />
-            <path
-              d="M15.5 8.5a4.5 4.5 0 010 7M17.5 6.5a7.5 7.5 0 010 11"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-        )}
-      </button>
+      {/* Controles acima do blocker; pointer-events só no botão. */}
+      <div className="pointer-events-none absolute inset-0 z-30">
+        <button
+          type="button"
+          onClick={toggleMute}
+          className={`touch-target pointer-events-auto ${buttonPositionClass} z-40 flex items-center justify-center text-white/85 transition-opacity duration-300 hover:text-white ${
+            ready ? "" : "opacity-50"
+          }`}
+          style={buttonStyle}
+          aria-label={isMuted ? "Ativar som" : "Silenciar"}
+          aria-pressed={!isMuted}
+        >
+          <VolumeIcon muted={isMuted} />
+        </button>
+      </div>
     </div>
   );
 }
